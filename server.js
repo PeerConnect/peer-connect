@@ -36,4 +36,15 @@ io.on("connection", socket => {
     activeClients.splice(activeClients.indexOf(socket.id), 1);
     console.log(`activeClients: ${activeClients}`);
   });
+
+  socket.on("create", () => {
+    console.log("socket.on CREATE");
+    // keep track of how many clients are active
+    const numClients = activeClients.length;
+
+    // if client is first to connect
+    if (numClients === 1) {
+      socket.emit("created");
+    }
+  });
 });

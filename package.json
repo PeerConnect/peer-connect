@@ -20,7 +20,9 @@
   "dependencies": {
     "express": "^4.16.2",
     "path": "^0.12.7",
-    "socket.io": "^2.0.4"
+    "simple-peer": "^8.2.0",
+    "socket.io": "^2.0.4",
+    "wrtc": "0.0.65"
   },
   "devDependencies": {
     "nodemon": "^1.14.7"

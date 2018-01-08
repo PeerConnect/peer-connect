@@ -1,8 +1,6 @@
 const express = require("express");
 const path = require("path");
 const socket = require("socket.io");
-// const Peer = require("simple-peer");
-// const wrtc = require("wrtc");
 
 // App setup
 const PORT = 8080;
@@ -45,26 +43,14 @@ io.on("connection", socket => {
     console.log("socket.on CREATE");
     // keep track of how many clients are active
     numClients = activeClients.length;
-
-    // create new peer
-    // const p = new Peer({
-    //   initiator: numClients === 1 ? true : false,
-    //   wrtc: wrtc
-    // });
-
-    if (numClients === 1) {
-      // if client is first to connect
-      socket.emit("created", numClients);
-    } else {
-      // socket.emit("new_peer", numClients, socket.id);
-      io.sockets.emit("new_peer", { peer: socket.id });
-    }
-
-    // on receiving a message, broadcast it to every socket
-    socket.on("message", message => {
-      // log the message on the console
-      console.log("Client said:", message);
-      activeClients[1].emit("message", message);
-    });
+    io.sockets.emit('peer_count', {count: numClients})
   });
+
+  // on receiving a message, broadcast it to every socket
+  socket.on("WRTCMsg", message => {
+    // log the message on the console
+    console.log("Client said:", message);
+    io.sockets.emit("messaged", {message: message});
+  });
+
 });

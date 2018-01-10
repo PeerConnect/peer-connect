@@ -1,9 +1,11 @@
 const Peer = SimplePeer;
+const peerMethods = emitters;
+
 // indicates if client has downloaded assets from server
 // and can send assets to new client connections
 // track if assets have been downloaded
 let assetsDownloaded = false;
-
+// placeholder for webrtc peer
 let p = null;
 
 // Establish connection
@@ -11,15 +13,16 @@ const socket = io.connect();
 
 // front end is always notified of peer count
 socket.on('peer_count', message => {
-  console.log('peer count is : ', message.count)
-  if (message.count === 1) {
+  console.log(`peer count, initator count : ${message.numClients}, ${message.numInitiators}`)
+  console.log(typeof message.numInitiators)
+  if (message.numClients === 1 || message.numInitiators === 0) {
     loadAssetsFromServer();
     assetsDownloaded = true;
     sendNowInitiator()
     return;
   }
   // create peer-initiator
-  if (message.count > 1 && assetsDownloaded) {
+  if (message.numClients > 1 && assetsDownloaded) {
     if (!p) {
       console.log('created initiator and offer obj')
       p = new Peer({ initiator: true, trickle: false });
@@ -28,12 +31,11 @@ socket.on('peer_count', message => {
     return;
   }
   // create peer non-initiator
-  if (message.count > 1 && !p){
+  if (message.numClients > 1 && !p){
     console.log('initiating non-initiator peer')
     p = new Peer({ initiator: false, trickle: false });
     peerMethods(p)
   }
-
 })
 
 socket.on('messaged', message => {
@@ -52,60 +54,22 @@ socket.on('messaged', message => {
 
 // sends a message back to the singaling server
 function sendWRTCMsg(message) {
-  socket.emit("WRTCMsg", message);
+  socket.emit("WRTC_msg", message);
 }
 
 function sendNowInitiator() {
-  socket.emit('nowInitiator', {id: socket.id})
-}
-
-// establish/bind wrtc peer methods
-function peerMethods (peer) {
-
-  peer.on("error", err => {
-    console.log(`error: ${err}`);
-  });
-
-  peer.on("signal", data => {
-    console.log(`signaling ${data.type}`)
-    let stringified = JSON.stringify(data)
-    // console.log(`SIGNAL: ${stringified}`);
-    sendWRTCMsg(stringified)
-  });
-
-  peer.on('connect', function () {
-    console.log('CONNECTED')
-    if (assetsDownloaded) {
-      console.log('sending data')
-      sendAssetsToPeer(peer)
-    }
-  })
-
-  peer.on('data', function (data) {
-    console.log('data: ' + data)
-    // have to make sure data is fully downloaded
-    assetsDownloaded = true
-    sendNowInitiator()
-    p.destroy()
-  })
-
-  peer.on('close', function () {
-    console.log('closed!')
-    p = null
-  })
+  socket.emit('now_initiator', {id: socket.id})
 }
 
 function sendAssetsToPeer(peer) {
-  let test = new Promise((resolve, reject) => {
-    peer.send('this is the data being sent!')
-    resolve('message sent!')
-  })
-  test.then(msg => {
-    console.log(msg)
-  })
+  // ** convert files into data chunks and send **
+  convertToChunks()
+  peer.send('this is the data being sent!')
+  console.log('message sent')
 }
 
 function downloadAssetsFromPeer() {
+  // store chunks here?
   console.log("LOAD ASSETS FROM PEER");
 }
 
@@ -122,4 +86,14 @@ function loadAssetsFromServer() {
   image1.setAttribute("src", "../assets/image1.jpg");
   image2.setAttribute("src", "../assets/image2.png");
   image3.setAttribute("src", "../assets/image3.jpg");
+}
+
+function convertToChunks() {
+  // convert files into chunks
+  console.log('converted files into chunks!')
+}
+
+function convertDataToUsable() {
+  // convert chunks/data to usable data
+  console.log('converted files to usables!')
 }

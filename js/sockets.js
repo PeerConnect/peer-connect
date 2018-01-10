@@ -64,7 +64,30 @@ function sendNowInitiator() {
 function sendAssetsToPeer(peer) {
   // ** convert files into data chunks and send **
   convertToChunks()
-  peer.send('this is the data being sent!')
+  // peer.send('this is the data being sent!')
+  let data = getImgData();
+  console.log(data);
+  // console.log(JSON.stringify(data.slice(0,50)));
+  // peer.send(data.slice(0,9000));
+  let delay = 1;
+  let charSlice = 20000;
+  let terminator = "\n";
+  let dataSent = 0;
+  let intervalID = 0;
+  intervalID = setInterval(function () {
+    let slideEndIndex = dataSent + charSlice;
+    if (slideEndIndex > data.length) {
+      slideEndIndex = data.length;
+    }
+    peer.send(data.slice(dataSent, slideEndIndex));
+    dataSent = slideEndIndex;
+    if (dataSent + 1 >= data.length) {
+      console.log("All data chunks sent.");
+      peer.send("FINISHED-YUY");
+      clearInterval(intervalID);
+    }
+  }, delay);
+
   console.log('message sent')
 }
 
@@ -96,4 +119,16 @@ function convertToChunks() {
 function convertDataToUsable() {
   // convert chunks/data to usable data
   console.log('converted files to usables!')
+}
+
+function getImgData() {
+  let canvas = document.createElement('canvas');
+  let context = canvas.getContext('2d');
+  let img = document.getElementById('image1');
+  context.canvas.width = img.width;
+  context.canvas.height = img.height;
+  context.drawImage(img, 0, 0, img.width, img.height);
+  // let myData = context.getImageData(0, 0, img.width, img.height);
+
+  return canvas.toDataURL();
 }

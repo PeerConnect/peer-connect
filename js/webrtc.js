@@ -1,4 +1,6 @@
 // establish/bind wrtc peer methods
+let imageData;
+
 function emitters (peer) {
 
   peer.on("error", err => {
@@ -24,11 +26,19 @@ function emitters (peer) {
     // download from peer
     // have to make sure data is fully downloaded and convert to renderable data
     // then insert into DOM
-    downloadAssetsFromPeer()
-    convertDataToUsable()
-    assetsDownloaded = true
+    // downloadAssetsFromPeer()
+    // convertDataToUsable()
+    if (data == "FINISHED-YUY") {
+      console.log("Received all data. Setting image.");      
+      console.log(imageData.slice(14));
+      assetsDownloaded = true;   
+      document.getElementById("image1").src = "data:" + imageData.slice(14);
+      p.destroy()
+    } else {
+      imageData += data;
+      //trace("Data chunk received");
+    }
     sendNowInitiator()
-    p.destroy()
   })
 
   peer.on('close', function () {

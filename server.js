@@ -25,31 +25,35 @@ app.use((req, res, next) => {
 // Sockets setup
 const io = socket(server);
 // Store list of all clients actively using app
-const activeClients = [];
-let numClients;
+const activeClients = {};
+let numClients = 0
 
 io.on("connection", socket => {
   console.log(`socket connection started. ID: ${socket.id}`);
-  activeClients.push(socket);
-  console.log(`activeClients: ${activeClients}`);
+  activeClients[socket.id] = {data: socket, initiator: false};
+  numClients++
+  io.sockets.emit('peer_count', {count: numClients})
+  // console.log(`activeClients: ${activeClients}`);
+  console.log(`numClients: ${numClients}`)
 
   socket.on("disconnect", () => {
     console.log(`disconnecting ${socket.id}`);
-    activeClients.splice(activeClients.indexOf(socket.id), 1);
-    console.log(`activeClients: ${activeClients}`);
+    delete activeClients[socket.id]
+    numClients--
+    // console.log(`activeClients: ${activeClients}`);
+    console.log(`numClients: ${numClients}`)
+
   });
 
-  socket.on("create", () => {
-    console.log("socket.on CREATE");
-    // keep track of how many clients are active
-    numClients = activeClients.length;
-    io.sockets.emit('peer_count', {count: numClients})
-  });
+  socket.on('nowInitiator', (message) => {
+    id = message.id
+    activeClients[id].initiator = true
+  })
 
   // on receiving a message, broadcast it to every socket
   socket.on("WRTCMsg", message => {
     // log the message on the console
-    console.log("Client said:", message);
+    // console.log("Client said:", message);
     io.sockets.emit("messaged", {message: message});
   });
 

@@ -9,25 +9,25 @@ let p = null;
 // Establish connection
 const socket = io.connect();
 
-// client has loaded page
-socket.emit("create");
-
 // front end is always notified of peer count
 socket.on('peer_count', message => {
   console.log('peer count is : ', message.count)
   if (message.count === 1) {
     loadAssetsFromServer();
     assetsDownloaded = true;
+    sendNowInitiator()
     return;
   }
-  // initiate peer initator
-  if (message.count > 1 && assetsDownloaded && !p) {
-    console.log('initiating initiator and sending offer')
-    p = new Peer({ initiator: true, trickle: false });
-    peerMethods(p)
+  // create peer-initiator
+  if (message.count > 1 && assetsDownloaded) {
+    if (!p) {
+      console.log('created initiator and offer obj')
+      p = new Peer({ initiator: true, trickle: false });
+      peerMethods(p)
+    }
     return;
   }
-  // initiate peer non-initator
+  // create peer non-initiator
   if (message.count > 1 && !p){
     console.log('initiating non-initiator peer')
     p = new Peer({ initiator: false, trickle: false });
@@ -55,16 +55,21 @@ function sendWRTCMsg(message) {
   socket.emit("WRTCMsg", message);
 }
 
+function sendNowInitiator() {
+  socket.emit('nowInitiator', {id: socket.id})
+}
+
 // establish/bind wrtc peer methods
 function peerMethods (peer) {
+
   peer.on("error", err => {
     console.log(`error: ${err}`);
   });
 
   peer.on("signal", data => {
-    console.log('signaling')
+    console.log(`signaling ${data.type}`)
     let stringified = JSON.stringify(data)
-    console.log(`SIGNAL: ${stringified}`);
+    // console.log(`SIGNAL: ${stringified}`);
     sendWRTCMsg(stringified)
   });
 
@@ -78,11 +83,26 @@ function peerMethods (peer) {
 
   peer.on('data', function (data) {
     console.log('data: ' + data)
+    // have to make sure data is fully downloaded
+    assetsDownloaded = true
+    sendNowInitiator()
+    p.destroy()
+  })
+
+  peer.on('close', function () {
+    console.log('closed!')
+    p = null
   })
 }
 
 function sendAssetsToPeer(peer) {
-  peer.send('hello there this is cool')
+  let test = new Promise((resolve, reject) => {
+    peer.send('this is the data being sent!')
+    resolve('message sent!')
+  })
+  test.then(msg => {
+    console.log(msg)
+  })
 }
 
 function downloadAssetsFromPeer() {
@@ -102,5 +122,4 @@ function loadAssetsFromServer() {
   image1.setAttribute("src", "../assets/image1.jpg");
   image2.setAttribute("src", "../assets/image2.png");
   image3.setAttribute("src", "../assets/image3.jpg");
-  assetsDownloaded = true
 }

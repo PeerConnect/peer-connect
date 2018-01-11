@@ -26,16 +26,24 @@ app.use((req, res, next) => {
 const io = socket(server);
 // Store list of all clients actively using app
 const activeClients = {};
+const clients = [];
 // number of clients, number of intiators
 let numClients = 0
 let numInitiators = 0
 
-io.on("connection", socket => {
+io.on("connection", function(socket) {
   console.log(`socket connection started. ID: ${socket.id}`);
   activeClients[socket.id] = {data: socket, initiator: false};
-  numClients++
-  io.sockets.emit('peer_count', { numClients, numInitiators })
+  numClients++;
+  let num = Math.floor(Math.random() * clients.length);
+  clients.push(socket);
+  socket.emit('peer_count', { numClients, numInitiators } );
+  console.log(num);
+  clients[num].emit('peer_count', { numClients, numInitiators } );
+  // console.log(num);
+  // array[].emit('peer_count', { numClients, numInitiators }, array);
   console.log(`numClients: ${numClients}`)
+
 
   socket.on("disconnect", () => {
     console.log(`disconnecting ${socket.id}`);

@@ -7,12 +7,13 @@ const peerMethods = emitters;
 let assetsDownloaded = false;
 // placeholder for webrtc peer
 let p = null;
-
+let my_id = null;
 // Establish connection
 const socket = io.connect();
 
+
 // front end is always notified of peer count
-socket.on('peer_count', message => {
+socket.on('peer_count', function(message) {
   console.log(`peer count, initator count : ${message.numClients}, ${message.numInitiators}`)
   console.log(typeof message.numInitiators)
   if (message.numClients === 1 || message.numInitiators === 0) {
@@ -22,16 +23,14 @@ socket.on('peer_count', message => {
     return;
   }
   // create peer-initiator
-  if (message.numClients > 1 && assetsDownloaded) {
+  if (assetsDownloaded) {
     if (!p) {
       console.log('created initiator and offer obj')
       p = new Peer({ initiator: true, trickle: false });
       peerMethods(p)
     }
     return;
-  }
-  // create peer non-initiator
-  if (message.numClients > 1 && !p){
+  } else {
     console.log('initiating non-initiator peer')
     p = new Peer({ initiator: false, trickle: false });
     peerMethods(p)
@@ -39,6 +38,7 @@ socket.on('peer_count', message => {
 })
 
 socket.on('messaged', message => {
+  if (!p) return;
   const parsedMsg = JSON.parse(message.message)
   if (assetsDownloaded && parsedMsg.type === 'answer') {
     console.log('received answer obj')

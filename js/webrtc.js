@@ -30,15 +30,15 @@ function emitters (peer) {
     // convertDataToUsable()
     if (data == "FINISHED-YUY") {
       console.log("Received all data. Setting image.");      
-      console.log(imageData.slice(14));
-      assetsDownloaded = true;   
+      // console.log(imageData.slice(14));
+      assetsDownloaded = true;
       document.getElementById("image1").src = "data:" + imageData.slice(14);
       p.destroy()
     } else {
       imageData += data;
       //trace("Data chunk received");
     }
-    sendNowInitiator()
+    // sendNowInitiator()
   })
 
   peer.on('close', function () {

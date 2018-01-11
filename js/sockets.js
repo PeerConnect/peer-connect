@@ -16,14 +16,16 @@ let imageData;
 let counter = 0;
 
 //used to time the asset load time
-let browserOpenTime = new Date();
+const browserOpenTime = new Date();
+let currentTime = new Date();
 let peersConnectedTime;
 let dataReceivedTime;
 let connectionDestroyedTime;
 
-function reportTime(time, domId) {
+function reportTime(time, currentOrTotal, domId) {
   time = new Date();
-  document.getElementById(domId).innerHTML += `${time - browserOpenTime} ms`;
+  document.getElementById(domId).innerHTML += `${time - currentOrTotal} ms  `;
+  currentTime = new Date();
 }
 // get img tag nodes
 imageArray = document.getElementsByTagName('img');
@@ -76,7 +78,7 @@ function handleOnSignal(data) {
 // handles when peers are connected through P2P
 function handleOnConnect() {
   console.log('CONNECTED')
-  reportTime(peersConnectedTime, 'time_to_connect');
+  reportTime(peersConnectedTime, currentTime, 'time_to_connect');
   // send ice candidates if exist
   if (candidates.length) {
     p.send(JSON.stringify(candidates))
@@ -102,14 +104,15 @@ function handleOnData(data) {
   if (data.slice(0, 12) == "FINISHED-YUY") {
     counter++;
     console.log("Received all data. Setting image.");
-    reportTime(dataReceivedTime, 'time_to_receive');
+    reportTime(dataReceivedTime, currentTime, 'time_to_receive');
 
     assetsDownloaded = true;
     imageArray[data.slice(12)].src = "data:" + imageData.slice(14);
     imageData = '';
     if (counter === imageArray.length) {
       console.log('DESTROYING PEERS');
-      reportTime(connectionDestroyedTime, 'time_to_destroy');
+      reportTime(connectionDestroyedTime, currentTime, 'time_to_destroy');
+      reportTime(connectionDestroyedTime, browserOpenTime, 'time_total');
     }
   } else {
     imageData += data;

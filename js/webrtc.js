@@ -1,27 +1,27 @@
 // establish/bind wrtc peer methods
-let imageData;
 
-function emitters (peer) {
+function listeners (peer) {
 
   peer.on("error", err => {
-    console.log(`error: ${err}`);
+    console.log(err)
   });
 
-  peer.on("signal", data => {
-    console.log(`signaling ${data.type}`)
-    const stringified = JSON.stringify(data)
-    sendWRTCMsg(stringified)
+  /* Signal is automatically called when a new peer is created with {initiator:true} parameter. This generates the offer object to be sent to the peer.
+  Upon receiving the offer object by the receiver, invoke p.signal with the offer object as its parameter. This will generate the answer object. Do the same with the host with the answer object. */
+  peer.on("signal", (data) => {
+    handleOnSignal(data, peerId)
   });
 
-  peer.on('connect', function () {
-    console.log('CONNECTED')
-    if (assetsDownloaded) {
-      console.log('sending data')
-      sendAssetsToPeer(peer)
-    }
+  // listener for when P2P is established. Ice candidates sent first, then media data itself.
+  peer.on('connect', () => {
+    handleOnConnect()
   })
 
+  // listener for when data is being received
   peer.on('data', function (data) {
+
+    handleOnData(data)
+
     console.log('data on peer.on is: ', data)
     console.log('data.slice is: ', data.slice(0, 12))
     // download from peer
@@ -53,7 +53,7 @@ function emitters (peer) {
   })
 
   peer.on('close', function () {
-    console.log('closed!')
-    p = null
+    console.log('P2P closed')
+    assetsDownloaded ? createInitiator() : createInitiator('base')
   })
 }

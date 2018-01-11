@@ -1,5 +1,7 @@
 const Peer = SimplePeer;
 const peerMethods = emitters;
+//get img tag nodes
+imageArray = imageFind();
 
 // indicates if client has downloaded assets from server
 // and can send assets to new client connections
@@ -7,6 +9,7 @@ const peerMethods = emitters;
 let assetsDownloaded = false;
 // placeholder for webrtc peer
 let p = null;
+
 
 // Establish connection
 const socket = io.connect();
@@ -63,32 +66,36 @@ function sendNowInitiator() {
 
 function sendAssetsToPeer(peer) {
   // ** convert files into data chunks and send **
-  convertToChunks()
-  // peer.send('this is the data being sent!')
-  let data = getImgData();
-  console.log(data);
-  // console.log(JSON.stringify(data.slice(0,50)));
-  // peer.send(data.slice(0,9000));
-  let delay = 1;
-  let charSlice = 20000;
-  let terminator = "\n";
-  let dataSent = 0;
-  let intervalID = 0;
-  intervalID = setInterval(function () {
-    let slideEndIndex = dataSent + charSlice;
-    if (slideEndIndex > data.length) {
-      slideEndIndex = data.length;
-    }
-    peer.send(data.slice(dataSent, slideEndIndex));
-    dataSent = slideEndIndex;
-    if (dataSent + 1 >= data.length) {
-      console.log("All data chunks sent.");
-      peer.send("FINISHED-YUY");
-      clearInterval(intervalID);
-    }
-  }, delay);
+  convertToChunks();
 
-  console.log('message sent')
+  // peer.send('this is the data being sent!')
+  for (let i = 0; i < imageArray.length; i += 1) {
+    console.log('that for loop tho: ', i)
+    let data = getImgData(imageArray[i]);
+    // console.log(JSON.stringify(data.slice(0,50)));
+    // peer.send(data.slice(0,9000));
+    let delay = 1;
+    let charSlice = 20000;
+    let terminator = "\n";
+    let dataSent = 0;
+    let intervalID = 0;
+    intervalID = setInterval(function () {
+      let slideEndIndex = dataSent + charSlice;
+      if (slideEndIndex > data.length) {
+        slideEndIndex = data.length;
+      }
+      peer.send(data.slice(dataSent, slideEndIndex));
+      dataSent = slideEndIndex;
+      if (dataSent + 1 >= data.length) {
+        console.log("All data chunks sent.");
+        peer.send(`FINISHED-YUY${i}`);
+        clearInterval(intervalID);
+      }
+      console.log('finished send ')
+    }, delay);
+
+    console.log('message sent')
+  }
 }
 
 function downloadAssetsFromPeer() {
@@ -121,10 +128,12 @@ function convertDataToUsable() {
   console.log('converted files to usables!')
 }
 
-function getImgData() {
+function getImgData(image) {
   let canvas = document.createElement('canvas');
   let context = canvas.getContext('2d');
-  let img = document.getElementById('image1');
+  // let img = document.getElementById('image1');
+  let img = image;
+  console.log('img is: ', image);
   context.canvas.width = img.width;
   context.canvas.height = img.height;
   context.drawImage(img, 0, 0, img.width, img.height);

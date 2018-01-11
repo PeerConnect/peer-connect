@@ -26,9 +26,11 @@ app.use((req, res, next) => {
 const io = socket(server);
 // Store list of all clients actively using app
 const activeClients = {};
+const clients = [];
 // number of clients, number of intiators
 let numClients = 0
 let numInitiators = 0
+
 // server socket
 io.on("connection", socket => {
   console.log(`socket connection started. ID: ${socket.id}`);

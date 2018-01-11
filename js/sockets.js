@@ -1,11 +1,7 @@
 const Peer = SimplePeer;
-<<<<<<< test-sample
 const peerMethods = listeners;
-=======
-const peerMethods = emitters;
 //get img tag nodes
 imageArray = imageFind();
->>>>>>> master
 
 // track if assets have been downloaded, determines if peer can be an initiator
 // placeholder for webrtc peer
@@ -120,27 +116,6 @@ function createInitiator (base) {
 
 // data chunking/parsing
 function sendAssetsToPeer(peer) {
-<<<<<<< test-sample
-  let data = getImgData();
-  let delay = 1;
-  let charSlice = 20000;
-  let terminator = "\n";
-  let dataSent = 0;
-  let intervalID = 0;
-  intervalID = setInterval(function () {
-    let slideEndIndex = dataSent + charSlice;
-    if (slideEndIndex > data.length) {
-      slideEndIndex = data.length;
-    }
-    peer.send(data.slice(dataSent, slideEndIndex));
-    dataSent = slideEndIndex;
-    if (dataSent + 1 >= data.length) {
-      peer.send("FINISHED-YUY");
-      clearInterval(intervalID);
-    }
-  }, delay);
-  console.log('Message sent.')
-=======
   // ** convert files into data chunks and send **
   convertToChunks();
 
@@ -172,7 +147,6 @@ function sendAssetsToPeer(peer) {
 
     console.log('message sent')
   }
->>>>>>> master
 }
 
 function getImgData() {
@@ -199,8 +173,6 @@ function loadAssetsFromServer() {
   image2.setAttribute("src", "../assets/image2.png");
   image3.setAttribute("src", "../assets/image3.jpg");
 }
-<<<<<<< test-sample
-=======
 
 function convertToChunks() {
   // convert files into chunks
@@ -225,4 +197,3 @@ function getImgData(image) {
 
   return canvas.toDataURL();
 }
->>>>>>> master

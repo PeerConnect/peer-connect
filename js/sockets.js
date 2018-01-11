@@ -107,9 +107,6 @@ function handleOnData(data) {
       console.log('DESTROYING PEERS');
       p.destroy();
     }
-    
-    //destroy connection after all assets have been loaded
-    // p.destroy();
   } else {
     imageData += data;
   }

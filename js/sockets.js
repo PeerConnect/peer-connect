@@ -1,7 +1,9 @@
 const Peer = SimplePeer;
 const peerMethods = listeners;
 //get img tag nodes
-imageArray = imageFind();
+imageArray = document.getElementsByTagName('img');
+
+let counter = 0;
 
 // track if assets have been downloaded, determines if peer can be an initiator
 // placeholder for webrtc peer
@@ -85,6 +87,7 @@ function handleOnConnect() {
 
 // handles when data is being received
 function handleOnData(data) {
+  console.log(data);
   if (data.slice(0,1).toString() === '[') {
     const receivedCandidates = JSON.parse(data)
     receivedCandidates.forEach(ele => {
@@ -93,12 +96,17 @@ function handleOnData(data) {
     console.log('Received all ice candidates.')
     return;
   }
-  if (data == "FINISHED-YUY") {
+  if (data.slice(0, 12) == "FINISHED-YUY") {
+    // console.log('data when FINISHED-YUY is: ', data)
+    counter++;
     console.log("Received all data. Setting image.");
     assetsDownloaded = true;
-    document.getElementById("image1").src = "data:" + imageData.slice(14);
-    assetsDownloaded = true
-    p.destroy()
+    imageArray[data.slice(12)].src = "data:" + imageData.slice(14);
+    imageData = '';
+    if (counter === imageArray.length) {
+      console.log('DESTROYING PEERS');
+      p.destroy();
+    }
   } else {
     imageData += data;
   }

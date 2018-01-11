@@ -29,30 +29,59 @@ const activeClients = {};
 // number of clients, number of intiators
 let numClients = 0
 let numInitiators = 0
-
+// server socket
 io.on("connection", socket => {
   console.log(`socket connection started. ID: ${socket.id}`);
-  activeClients[socket.id] = {data: socket, initiator: false};
-  numClients++
-  io.sockets.emit('peer_count', { numClients, numInitiators })
-  console.log(`numClients: ${numClients}`)
 
+  activeClients[socket.id] = {
+    initiator: false,
+    offer: null,
+    answer: null,
+    sendingData: false,
+  };
+
+  numClients++
+  // create base initiator if no avaliable initiator
+  if (!numInitiators) {
+    socket.emit('create_base_initiator')
+  }
+  // initiators avaliable, create receiver
+  if (numInitiators) {
+    // iterate through activeClients to find initiator avaliable initiator and make that initiator unavaliable (initiator key set to false). Update numInitiators and emit to receiver and send initiator data
+    for (let id in activeClients) {
+      if (activeClients[id].initiator) {
+        const initiatorData = {
+          offer: activeClients[id].offer,
+          peerId: id
+        }
+        activeClients[id].initiator = false
+        numInitiators--
+        console.log('Emitting create r p', socket.id)
+        socket.emit('create_receiver_peer', initiatorData)
+        break;
+      }
+    }
+  }
+
+  // Initiator sent offer object to server. Store offer object to the client's respective object inside activeClients. Set this client to an initiator and update numInitiators count.
+  socket.on('offer_to_server', message => {
+    numInitiators++
+    activeClients[socket.id].initiator = true
+    activeClients[socket.id].offer = message.offer
+    console.log(`numClients, numInitiators: ${numClients}, ${numInitiators}`)
+  })
+
+  // Receiver sent answer object to server. Send this answer object to the specific initiator that provided the offer object to the receiver.
+  socket.on('answer_to_server', message => {
+    socket.to(message.peerId).emit('answer_to_initiator', message.answer)
+  })
+
+  // if diconnected user was an initiator, update accordingly with numClients as well
   socket.on("disconnect", () => {
     console.log(`disconnecting ${socket.id}`);
     if (activeClients[socket.id].initiator) numInitiators--
     delete activeClients[socket.id]
     numClients--
-    console.log(`numClients: ${numClients}`)
-  });
-
-  socket.on('now_initiator', (message) => {
-    id = message.id
-    numInitiators++
-    activeClients[id].initiator = true
-  })
-
-  // on receiving a message, broadcast it to every socket
-  socket.on("WRTC_msg", message => {
-    io.sockets.emit("messaged", {message: message});
+    console.log(`numClients, numInitiators: ${numClients}, ${numInitiators}`)
   });
 });

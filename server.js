@@ -30,23 +30,7 @@ const clients = [];
 // number of clients, number of intiators
 let numClients = 0
 let numInitiators = 0
-<<<<<<< HEAD
 
-io.on("connection", function(socket) {
-  console.log(`socket connection started. ID: ${socket.id}`);
-  activeClients[socket.id] = {data: socket, initiator: false};
-  numClients++;
-  let num = Math.floor(Math.random() * clients.length);
-  clients.push(socket);
-  socket.emit('peer_count', { numClients, numInitiators } );
-  console.log(num);
-  clients[num].emit('peer_count', { numClients, numInitiators } );
-  // console.log(num);
-  // array[].emit('peer_count', { numClients, numInitiators }, array);
-  console.log(`numClients: ${numClients}`)
-
-
-=======
 // server socket
 io.on("connection", socket => {
   console.log(`socket connection started. ID: ${socket.id}`);
@@ -95,7 +79,6 @@ io.on("connection", socket => {
   })
 
   // if diconnected user was an initiator, update accordingly with numClients as well
->>>>>>> 5b2116c9e2a5b50735ad69582b95772acff174a9
   socket.on("disconnect", () => {
     console.log(`disconnecting ${socket.id}`);
     if (activeClients[socket.id].initiator) numInitiators--

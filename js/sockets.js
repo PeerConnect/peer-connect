@@ -30,7 +30,7 @@ socket.on('create_base_initiator', () => {
 // Create receiver peer; server determined that this peer can be a receiver and sent a stored offer object from an avaliable initiator
 socket.on('create_receiver_peer', message => {
   console.log('creating receiver peer')
-  p = new Peer({initiator: false, trickle: true})
+  p = new Peer({ initiator: false, trickle: true })
   peerMethods(p)
   // peerId is the socket id of the avaliable initiator that this peer will pair with
   peerId = message.peerId
@@ -49,12 +49,12 @@ function handleOnSignal(data) {
   // send offer object to server for server to store
   if (data.type === 'offer') {
     console.log('Emitting offer_to_server.')
-    socket.emit('offer_to_server', {offer: data})
+    socket.emit('offer_to_server', { offer: data })
   }
   // send answer object to server for server to send to avaliable initiator
   if (data.type === 'answer') {
     console.log('Emitting answer_to_server.')
-    socket.emit('answer_to_server', {answer: data, peerId: peerId})
+    socket.emit('answer_to_server', { answer: data, peerId: peerId })
   }
   // After the offer/answer object is generated, ice candidates are generated as well. These are stored to be sent after the P2P connection is established.
   if (data.candidate) {
@@ -79,7 +79,7 @@ function handleOnConnect() {
 // handles when data is being received
 function handleOnData(data) {
   // check if receiving ice candidate
-  if (data.slice(0,1).toString() === '[') {
+  if (data.slice(0, 1).toString() === '[') {
     const receivedCandidates = JSON.parse(data)
     receivedCandidates.forEach(ele => {
       p.signal(ele)
@@ -103,12 +103,12 @@ function handleOnData(data) {
 }
 
 // Creates an initiator (therefore emitting a signal that creates an offer). The base parameter determines if initiator should download assets from server (example: there are no other initiators connected or client's peer got disconnected).
-function createInitiator (base) {
+function createInitiator(base) {
   if (base) {
     loadAssetsFromServer();
     assetsDownloaded = true
   }
-  p = new Peer({initiator: true, trickle: false});
+  p = new Peer({ initiator: true, trickle: false });
   peerMethods(p)
 }
 

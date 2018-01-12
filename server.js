@@ -9,6 +9,9 @@ const server = app.listen(PORT, () =>
   console.log(`App listening on port ${PORT}...`)
 );
 
+// PeerConnect configuration
+const peerConfig = require('./peer-config.js');
+
 // Serve static files
 app.use(express.static(path.join(__dirname, "/")));
 

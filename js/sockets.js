@@ -1,99 +1,198 @@
 const Peer = SimplePeer;
-const peerMethods = emitters;
+const peerMethods = listeners;
 
-// indicates if client has downloaded assets from server
-// and can send assets to new client connections
-// track if assets have been downloaded
-let assetsDownloaded = false;
+
 // placeholder for webrtc peer
+// track if assets have been downloaded, determines if peer can be an initiator
+// peerID is the the socket.id of the initiator that the receiver gets so the server can send back the answer object directly to the specific initiator
+// candidates is an array of the ice candidates to send to the peer once P2P connection is established
 let p = null;
+let assetsDownloaded = false;
+let peerId = '';
+let candidates = [];
+
+// global variables for data parsing/transfer
+let imageData;
+let counter = 0;
+
+//used to time the asset load time
+const browserOpenTime = new Date();
+let currentTime = new Date();
+let peersConnectedTime;
+let dataReceivedTime;
+let connectionDestroyedTime;
+
+function reportTime(time, currentOrTotal, domId) {
+  time = new Date();
+  document.getElementById(domId).innerHTML += `${time - currentOrTotal} ms  `;
+  currentTime = new Date();
+}
+// get img tag nodes
+imageArray = document.getElementsByTagName('img');
+
 
 // Establish connection
 const socket = io.connect();
 
-// front end is always notified of peer count
-socket.on('peer_count', message => {
-  console.log(`peer count, initator count : ${message.numClients}, ${message.numInitiators}`)
-  console.log(typeof message.numInitiators)
-  if (message.numClients === 1 || message.numInitiators === 0) {
-    loadAssetsFromServer();
-    assetsDownloaded = true;
-    sendNowInitiator()
-    return;
+// server is empty or assets downloaded so create initiator
+socket.on('create_base_initiator', () => {
+  // download assets from server, create initiator peer
+  // tell server assets were downloaded and send answer object to server (this happens when new peer is created with initiator key true)
+  createInitiator(true)
+})
+// Create receiver peer; server determined that this peer can be a receiver and sent a stored offer object from an avaliable initiator
+socket.on('create_receiver_peer', message => {
+  console.log('creating receiver peer')
+  p = new Peer({ initiator: false, trickle: true })
+  peerMethods(p)
+  // peerId is the socket id of the avaliable initiator that this peer will pair with
+  peerId = message.peerId
+  p.signal(message.offer)
+})
+
+// answer object has arrived to the initiator. Connection will when the signal(message) is invoked.
+socket.on('answer_to_initiator', message => {
+  console.log('answer_to_initiator')
+  // this final signal where initiator receives the answer does not call handleOnSignal/.on('signal'), it goes handleOnConnect.
+  p.signal(message)
+})
+
+// handles all signals
+function handleOnSignal(data) {
+  // send offer object to server for server to store
+  if (data.type === 'offer') {
+    console.log('Emitting offer_to_server.')
+    socket.emit('offer_to_server', { offer: data })
   }
-  // create peer-initiator
-  if (message.numClients > 1 && assetsDownloaded) {
-    if (!p) {
-      console.log('created initiator and offer obj')
-      p = new Peer({ initiator: true, trickle: false });
-      peerMethods(p)
+  // send answer object to server for server to send to avaliable initiator
+  if (data.type === 'answer') {
+    console.log('Emitting answer_to_server.')
+    socket.emit('answer_to_server', { answer: data, peerId: peerId })
+  }
+  // After the offer/answer object is generated, ice candidates are generated as well. These are stored to be sent after the P2P connection is established.
+  if (data.candidate) {
+    candidates.push(data)
+  }
+}
+
+// handles when peers are connected through P2P
+function handleOnConnect() {
+  console.log('CONNECTED')
+  reportTime(peersConnectedTime, currentTime, 'time_to_connect');
+  // send ice candidates if exist
+  if (candidates.length) {
+    p.send(JSON.stringify(candidates))
+    candidates = []
+  }
+}
+
+// handles when data is being received
+function handleOnData(data) {
+  // check if receiving ice candidate
+  if (data.slice(0, 1).toString() === '[') {
+    const receivedCandidates = JSON.parse(data)
+    receivedCandidates.forEach(ele => {
+      console.log('got candidate')
+      p.signal(ele)
+    })
+    console.log('Received all ice candidates.')
+    // send assets if initiator
+    if (assetsDownloaded) {
+      sendAssetsToPeer(p)
     }
     return;
   }
-  // create peer non-initiator
-  if (message.numClients > 1 && !p){
-    console.log('initiating non-initiator peer')
-    p = new Peer({ initiator: false, trickle: false });
-    peerMethods(p)
-  }
-})
+  if (data.slice(0, 12) == "FINISHED-YUY") {
+    counter++;
+    console.log("Received all data. Setting image.");
+    reportTime(dataReceivedTime, currentTime, 'time_to_receive');
 
-socket.on('messaged', message => {
-  const parsedMsg = JSON.parse(message.message)
-  if (assetsDownloaded && parsedMsg.type === 'answer') {
-    console.log('received answer obj')
-    p.signal(parsedMsg)
-    return;
+    assetsDownloaded = true;
+    imageArray[data.slice(12)].src = "data:" + imageData.slice(14);
+    imageData = '';
+    if (counter === imageArray.length) {
+      console.log('DESTROYING PEERS');
+      reportTime(connectionDestroyedTime, currentTime, 'time_to_destroy');
+      reportTime(connectionDestroyedTime, browserOpenTime, 'time_total');
+      p.destroy()
+      document.getElementById('downloaded_from').innerHTML = 'Assets got from PEER!!';
+    }
+  } else {
+    imageData += data;
   }
-  if (!assetsDownloaded && parsedMsg.type === 'offer') {
-    console.log('received offer obj')
-    p.signal(parsedMsg)
-    return;
-  }
-})
-
-// sends a message back to the singaling server
-function sendWRTCMsg(message) {
-  socket.emit("WRTC_msg", message);
 }
 
-function sendNowInitiator() {
-  socket.emit('now_initiator', {id: socket.id})
+// Creates an initiator (therefore emitting a signal that creates an offer). The base parameter determines if initiator should download assets from server (example: there are no other initiators connected or client's peer got disconnected).
+function createInitiator(base) {
+  if (base) {
+    loadAssetsFromServer();
+    assetsDownloaded = true
+  }
+  p = new Peer({ initiator: true, trickle: false });
+  peerMethods(p)
 }
 
+// data chunking/parsing
 function sendAssetsToPeer(peer) {
-  // ** convert files into data chunks and send **
-  convertToChunks()
-  peer.send('this is the data being sent!')
-  console.log('message sent')
+  for (let i = 0; i < imageArray.length; i += 1) {
+    let data = getImgData(imageArray[i]);
+    let delay = 1;
+    let charSlice = 20000;
+    let terminator = "\n";
+    let dataSent = 0;
+    let intervalID = 0;
+    intervalID = setInterval(function () {
+      let slideEndIndex = dataSent + charSlice;
+      if (slideEndIndex > data.length) {
+        slideEndIndex = data.length;
+      }
+      peer.send(data.slice(dataSent, slideEndIndex));
+      dataSent = slideEndIndex;
+      if (dataSent + 1 >= data.length) {
+        console.log("All data chunks sent.");
+        peer.send(`FINISHED-YUY${i}`);
+        clearInterval(intervalID);
+        console.log('Finished send.')
+      }
+    }, delay);
+
+    console.log('message sent')
+  }
 }
 
-function downloadAssetsFromPeer() {
-  // store chunks here?
-  console.log("LOAD ASSETS FROM PEER");
+function getImgData() {
+  let canvas = document.createElement('canvas');
+  let context = canvas.getContext('2d');
+  let img = document.getElementById('image1');
+  context.canvas.width = img.width;
+  context.canvas.height = img.height;
+  context.drawImage(img, 0, 0, img.width, img.height);
+  // let myData = context.getImageData(0, 0, img.width, img.height);
+  return canvas.toDataURL();
 }
 
 // download assets from server
 function loadAssetsFromServer() {
   console.log("LOAD ASSETS FROM SERVER");
-  // query DOM for test images
-  const image1 = document.getElementById("image1");
-  const image2 = document.getElementById("image2");
-  const image3 = document.getElementById("image3");
 
-  // if new client is the first on the page
-  // and has not downloaded assets yet
-  image1.setAttribute("src", "../assets/image1.jpg");
-  image2.setAttribute("src", "../assets/image2.png");
-  image3.setAttribute("src", "../assets/image3.jpg");
+  for (let i = 0; i < imageArray.length; i += 1) {
+    const imageSrc = imageArray[i].dataset.src;
+    document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
+  }
+
+  document.getElementById('downloaded_from').innerHTML = 'Assets got from SERVER!!';
 }
 
-function convertToChunks() {
-  // convert files into chunks
-  console.log('converted files into chunks!')
-}
+function getImgData(image) {
+  let canvas = document.createElement('canvas');
+  let context = canvas.getContext('2d');
+  // let img = document.getElementById('image1');
+  let img = image;
+  console.log('img is: ', image);
+  context.canvas.width = img.width;
+  context.canvas.height = img.height;
+  context.drawImage(img, 0, 0, img.width, img.height);
+  // let myData = context.getImageData(0, 0, img.width, img.height);
 
-function convertDataToUsable() {
-  // convert chunks/data to usable data
-  console.log('converted files to usables!')
+  return canvas.toDataURL();
 }

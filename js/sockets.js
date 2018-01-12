@@ -1,22 +1,34 @@
 const Peer = SimplePeer;
 const peerMethods = listeners;
-//get img tag nodes
-imageArray = document.getElementsByTagName('img');
 
-let counter = 0;
 
-// track if assets have been downloaded, determines if peer can be an initiator
 // placeholder for webrtc peer
+// track if assets have been downloaded, determines if peer can be an initiator
 // peerID is the the socket.id of the initiator that the receiver gets so the server can send back the answer object directly to the specific initiator
 // candidates is an array of the ice candidates to send to the peer once P2P connection is established
 let p = null;
 let assetsDownloaded = false;
 let peerId = '';
-let candidates = []
+let candidates = [];
 
 // global variables for data parsing/transfer
 let imageData;
-let signalData;
+let counter = 0;
+
+//used to time the asset load time
+const browserOpenTime = new Date();
+let currentTime = new Date();
+let peersConnectedTime;
+let dataReceivedTime;
+let connectionDestroyedTime;
+
+function reportTime(time, currentOrTotal, domId) {
+  time = new Date();
+  document.getElementById(domId).innerHTML += `${time - currentOrTotal} ms  `;
+  currentTime = new Date();
+}
+// get img tag nodes
+imageArray = document.getElementsByTagName('img');
 
 
 // Establish connection
@@ -42,12 +54,7 @@ socket.on('create_receiver_peer', message => {
 socket.on('answer_to_initiator', message => {
   console.log('answer_to_initiator')
   // this final signal where initiator receives the answer does not call handleOnSignal/.on('signal'), it goes handleOnConnect.
-  console.log(p.signal)
-  console.log(p.initiator)
-  console.log(message)
-  // console.log(p)
   p.signal(message)
-  console.log('after signal message')
 })
 
 // handles all signals
@@ -55,9 +62,7 @@ function handleOnSignal(data) {
   // send offer object to server for server to store
   if (data.type === 'offer') {
     console.log('Emitting offer_to_server.')
-    setTimeout(() => {
-      socket.emit('offer_to_server', {offer: data})
-    }, 3000)
+    socket.emit('offer_to_server', {offer: data})
   }
   // send answer object to server for server to send to avaliable initiator
   if (data.type === 'answer') {
@@ -73,39 +78,44 @@ function handleOnSignal(data) {
 // handles when peers are connected through P2P
 function handleOnConnect() {
   console.log('CONNECTED')
-  // send ice candidates first
+  reportTime(peersConnectedTime, currentTime, 'time_to_connect');
+  // send ice candidates if exist
   if (candidates.length) {
     p.send(JSON.stringify(candidates))
-    candidates = [];
-  }
-  // send assets if initiator
-  if (assetsDownloaded) {
-    console.log('Sending data.')
-    sendAssetsToPeer(p)
+    candidates = []
   }
 }
 
 // handles when data is being received
 function handleOnData(data) {
-  console.log(data);
+  // check if receiving ice candidate
   if (data.slice(0,1).toString() === '[') {
     const receivedCandidates = JSON.parse(data)
     receivedCandidates.forEach(ele => {
+      console.log('got candidate')
       p.signal(ele)
     })
     console.log('Received all ice candidates.')
+    // send assets if initiator
+    if (assetsDownloaded) {
+      sendAssetsToPeer(p)
+    }
     return;
   }
   if (data.slice(0, 12) == "FINISHED-YUY") {
-    // console.log('data when FINISHED-YUY is: ', data)
     counter++;
     console.log("Received all data. Setting image.");
+    reportTime(dataReceivedTime, currentTime, 'time_to_receive');
+
     assetsDownloaded = true;
     imageArray[data.slice(12)].src = "data:" + imageData.slice(14);
     imageData = '';
     if (counter === imageArray.length) {
       console.log('DESTROYING PEERS');
-      p.destroy();
+      reportTime(connectionDestroyedTime, currentTime, 'time_to_destroy');
+      reportTime(connectionDestroyedTime, browserOpenTime, 'time_total');
+      p.destroy()
+      document.getElementById('downloaded_from').innerHTML = 'Assets got from PEER!!';
     }
   } else {
     imageData += data;
@@ -124,15 +134,8 @@ function createInitiator (base) {
 
 // data chunking/parsing
 function sendAssetsToPeer(peer) {
-  // ** convert files into data chunks and send **
-  convertToChunks();
-
-  // peer.send('this is the data being sent!')
   for (let i = 0; i < imageArray.length; i += 1) {
-    console.log('that for loop tho: ', i)
     let data = getImgData(imageArray[i]);
-    // console.log(JSON.stringify(data.slice(0,50)));
-    // peer.send(data.slice(0,9000));
     let delay = 1;
     let charSlice = 20000;
     let terminator = "\n";
@@ -149,8 +152,8 @@ function sendAssetsToPeer(peer) {
         console.log("All data chunks sent.");
         peer.send(`FINISHED-YUY${i}`);
         clearInterval(intervalID);
+        console.log('Finished send.')
       }
-      console.log('finished send ')
     }, delay);
 
     console.log('message sent')
@@ -180,16 +183,8 @@ function loadAssetsFromServer() {
   image1.setAttribute("src", "../assets/image1.jpg");
   image2.setAttribute("src", "../assets/image2.png");
   image3.setAttribute("src", "../assets/image3.jpg");
-}
 
-function convertToChunks() {
-  // convert files into chunks
-  console.log('converted files into chunks!')
-}
-
-function convertDataToUsable() {
-  // convert chunks/data to usable data
-  console.log('converted files to usables!')
+  document.getElementById('downloaded_from').innerHTML = 'Assets got from SERVER!!';
 }
 
 function getImgData(image) {

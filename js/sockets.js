@@ -89,12 +89,8 @@ function handleOnConnect() {
 // handles when data is being received
 function handleOnData(data) {
   // check if receiving ice candidate
-<<<<<<< HEAD
   if (data.toString().slice(0,1) === '[') {
     console.log(data.toString());
-=======
-  if (data.slice(0, 1).toString() === '[') {
->>>>>>> be45b2bcf21e4b56f28809f23470f0ddc653b679
     const receivedCandidates = JSON.parse(data)
     receivedCandidates.forEach(ele => {
       console.log('got candidate')
@@ -162,17 +158,6 @@ function sendAssetsToPeer(peer) {
     peer.send(`FINISHED-YUY${i}`);
   }
   console.log('message sent')
-}
-
-function getImgData() {
-  let canvas = document.createElement('canvas');
-  let context = canvas.getContext('2d');
-  let img = document.getElementById('image1');
-  context.canvas.width = img.width;
-  context.canvas.height = img.height;
-  context.drawImage(img, 0, 0, img.width, img.height);
-  // let myData = context.getImageData(0, 0, img.width, img.height);
-  return canvas.toDataURL();
 }
 
 // download assets from server

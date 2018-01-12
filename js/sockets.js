@@ -135,28 +135,40 @@ function createInitiator(base) {
 // data chunking/parsing
 function sendAssetsToPeer(peer) {
   for (let i = 0; i < imageArray.length; i += 1) {
-    let data = getImgData(imageArray[i]);
-    let delay = 1;
-    let charSlice = 20000;
-    let terminator = "\n";
-    let dataSent = 0;
-    let intervalID = 0;
-    intervalID = setInterval(function () {
-      let slideEndIndex = dataSent + charSlice;
-      if (slideEndIndex > data.length) {
-        slideEndIndex = data.length;
-      }
-      peer.send(data.slice(dataSent, slideEndIndex));
-      dataSent = slideEndIndex;
-      if (dataSent + 1 >= data.length) {
-        console.log("All data chunks sent.");
-        peer.send(`FINISHED-YUY${i}`);
-        clearInterval(intervalID);
-        console.log('Finished send.')
-      }
-    }, delay);
+    const assetTypes = ['jpg'];
+    const imageSrc = imageArray[i].dataset.src;
+    console.log(`imageSrc:  ${imageSrc}`);
+    const regex = /(?:\.([^.]+))?$/;
+    const extension = regex.exec(imageSrc)[1];
+    console.log(`extension:  ${extension}`);
 
-    console.log('message sent')
+    if (assetTypes.includes(extension)) {
+      console.log(`*** ONLY TRANSFER ${imageSrc} ***`);
+      let data = getImgData(imageArray[i]);
+      let delay = 1;
+      let charSlice = 20000;
+      let terminator = "\n";
+      let dataSent = 0;
+      let intervalID = 0;
+      intervalID = setInterval(function () {
+        let slideEndIndex = dataSent + charSlice;
+        if (slideEndIndex > data.length) {
+          slideEndIndex = data.length;
+        }
+        peer.send(data.slice(dataSent, slideEndIndex));
+        dataSent = slideEndIndex;
+        if (dataSent + 1 >= data.length) {
+          console.log("All data chunks sent.");
+          peer.send(`FINISHED-YUY${i}`);
+          clearInterval(intervalID);
+          console.log('Finished send.')
+        }
+      }, delay);
+      console.log('message sent')
+    } else {
+      console.log(`*** LOAD ${imageSrc} FROM SERVER ***`);
+
+    }
   }
 }
 

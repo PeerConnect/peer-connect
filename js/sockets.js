@@ -84,10 +84,6 @@ function handleOnConnect() {
     p.send(JSON.stringify(candidates))
     candidates = []
   }
-  // send assets if initiator
-  if (assetsDownloaded) {
-    sendAssetsToPeer(p)
-  }
 }
 
 // handles when data is being received
@@ -96,9 +92,14 @@ function handleOnData(data) {
   if (data.slice(0,1).toString() === '[') {
     const receivedCandidates = JSON.parse(data)
     receivedCandidates.forEach(ele => {
+      console.log('got candidate')
       p.signal(ele)
     })
     console.log('Received all ice candidates.')
+    // send assets if initiator
+    if (assetsDownloaded) {
+      sendAssetsToPeer(p)
+    }
     return;
   }
   if (data.slice(0, 12) == "FINISHED-YUY") {
@@ -113,6 +114,8 @@ function handleOnData(data) {
       console.log('DESTROYING PEERS');
       reportTime(connectionDestroyedTime, currentTime, 'time_to_destroy');
       reportTime(connectionDestroyedTime, browserOpenTime, 'time_total');
+      p.destroy()
+      document.getElementById('downloaded_from').innerHTML = 'Assets got from PEER!!';
     }
   } else {
     imageData += data;
@@ -180,6 +183,8 @@ function loadAssetsFromServer() {
   image1.setAttribute("src", "../assets/image1.jpg");
   image2.setAttribute("src", "../assets/image2.png");
   image3.setAttribute("src", "../assets/image3.jpg");
+
+  document.getElementById('downloaded_from').innerHTML = 'Assets got from SERVER!!';
 }
 
 function getImgData(image) {

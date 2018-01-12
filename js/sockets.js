@@ -89,7 +89,8 @@ function handleOnConnect() {
 // handles when data is being received
 function handleOnData(data) {
   // check if receiving ice candidate
-  if (data.slice(0,1).toString() === '[') {
+  if (data.toString().slice(0,1) === '[') {
+    console.log(data.toString());
     const receivedCandidates = JSON.parse(data)
     receivedCandidates.forEach(ele => {
       console.log('got candidate')
@@ -102,15 +103,22 @@ function handleOnData(data) {
     }
     return;
   }
-  if (data.slice(0, 12) == "FINISHED-YUY") {
-    counter++;
-    console.log("Received all data. Setting image.");
-    reportTime(dataReceivedTime, currentTime, 'time_to_receive');
 
-    assetsDownloaded = true;
-    imageArray[data.slice(12)].src = "data:" + imageData.slice(14);
+
+
+  // let blob = new Blob( [ data ], { type: "image/png" } );
+  // console.log('DATA: ', new TextDecoder("utf-8").decode(data));
+  // console.log('DATA: ', imageData);
+  if (data.toString().slice(0,12) == "FINISHED-YUY") {
+    counter++;
+    console.log("Received all data for an image. Setting image.");
+    reportTime(dataReceivedTime, currentTime, 'time_to_receive');
+    if (imageData.slice(0,9) === 'undefined') imageArray[data.slice(12)].src = imageData.slice(9);
+    else imageArray[data.slice(12)].src = imageData
     imageData = '';
     if (counter === imageArray.length) {
+      console.log('All assets downloaded!');
+      assetsDownloaded = true;
       console.log('DESTROYING PEERS');
       reportTime(connectionDestroyedTime, currentTime, 'time_to_destroy');
       reportTime(connectionDestroyedTime, browserOpenTime, 'time_total');
@@ -118,7 +126,7 @@ function handleOnData(data) {
       document.getElementById('downloaded_from').innerHTML = 'Assets got from PEER!!';
     }
   } else {
-    imageData += data;
+    imageData += data.toString();
   }
 }
 
@@ -136,28 +144,20 @@ function createInitiator (base) {
 function sendAssetsToPeer(peer) {
   for (let i = 0; i < imageArray.length; i += 1) {
     let data = getImgData(imageArray[i]);
-    let delay = 1;
-    let charSlice = 20000;
-    let terminator = "\n";
-    let dataSent = 0;
-    let intervalID = 0;
-    intervalID = setInterval(function () {
-      let slideEndIndex = dataSent + charSlice;
-      if (slideEndIndex > data.length) {
-        slideEndIndex = data.length;
-      }
-      peer.send(data.slice(dataSent, slideEndIndex));
-      dataSent = slideEndIndex;
-      if (dataSent + 1 >= data.length) {
-        console.log("All data chunks sent.");
-        peer.send(`FINISHED-YUY${i}`);
-        clearInterval(intervalID);
-        console.log('Finished send.')
-      }
-    }, delay);
-
-    console.log('message sent')
+    let CHUNK_SIZE = 64000;
+    let n = data.length / CHUNK_SIZE;
+    for (let f = 0; f < n; f++) {
+      let start = f * CHUNK_SIZE;
+      let end = (f + 1) * CHUNK_SIZE;
+      peer.send(data.slice(start, end))
+    }
+    if (data.length % CHUNK_SIZE) {
+      peer.send(data.slice(n * CHUNK_SIZE))
+    }
+    // console.log("All data chunks sent.");
+    peer.send(`FINISHED-YUY${i}`);
   }
+  console.log('message sent')
 }
 
 function getImgData() {
@@ -180,8 +180,8 @@ function loadAssetsFromServer() {
   const image3 = document.getElementById("image3");
   // if new client is the first on the page
   // and has not downloaded assets yet
-  image1.setAttribute("src", "../assets/image1.jpg");
-  image2.setAttribute("src", "../assets/image2.png");
+  image1.setAttribute("src", "../assets/image5.jpeg");
+  image2.setAttribute("src", "../assets/image1.jpg");
   image3.setAttribute("src", "../assets/image3.jpg");
 
   document.getElementById('downloaded_from').innerHTML = 'Assets got from SERVER!!';
@@ -192,11 +192,9 @@ function getImgData(image) {
   let context = canvas.getContext('2d');
   // let img = document.getElementById('image1');
   let img = image;
-  console.log('img is: ', image);
   context.canvas.width = img.width;
   context.canvas.height = img.height;
   context.drawImage(img, 0, 0, img.width, img.height);
   // let myData = context.getImageData(0, 0, img.width, img.height);
-
   return canvas.toDataURL();
 }

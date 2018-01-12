@@ -48,7 +48,7 @@ io.on("connection", socket => {
   numClients++
   // create base initiator if no avaliable initiator
   if (numInitiators < peerConfig.threshold) {
-    socket.emit('create_base_initiator')
+    socket.emit('create_base_initiator', peerConfig)
   }
   // initiators avaliable, create receiver
   if (numInitiators >= peerConfig.threshold) {
@@ -61,7 +61,7 @@ io.on("connection", socket => {
         }
         activeClients[id].initiator = false
         numInitiators--
-        socket.emit('create_receiver_peer', initiatorData)
+        socket.emit('create_receiver_peer', initiatorData, peerConfig)
         break;
       }
     }

@@ -1,6 +1,8 @@
 const Peer = SimplePeer;
 const peerMethods = listeners;
 
+// peer configuration object from server
+let configuration;
 
 // placeholder for webrtc peer
 // track if assets have been downloaded, determines if peer can be an initiator
@@ -35,14 +37,18 @@ imageArray = document.getElementsByTagName('img');
 const socket = io.connect();
 
 // server is empty or assets downloaded so create initiator
-socket.on('create_base_initiator', () => {
+socket.on('create_base_initiator', peerConfig => {
+  // save peer configuration object to front end for host
+  configuration = peerConfig;
   // download assets from server, create initiator peer
   // tell server assets were downloaded and send answer object to server (this happens when new peer is created with initiator key true)
   createInitiator(true)
 })
 // Create receiver peer; server determined that this peer can be a receiver and sent a stored offer object from an avaliable initiator
-socket.on('create_receiver_peer', message => {
+socket.on('create_receiver_peer', (message, peerConfig) => {
   console.log('creating receiver peer')
+  // save peer configuration object to front end for peer
+  configuration = peerConfig;
   p = new Peer({ initiator: false, trickle: true })
   peerMethods(p)
   // peerId is the socket id of the avaliable initiator that this peer will pair with
@@ -104,6 +110,16 @@ function handleOnData(data) {
     return;
   }
 
+  for (let i = 0; i < imageArray.length; i += 1) {
+    const imageSrc = imageArray[i].dataset.src;
+    console.log(`imageSrc:  ${imageSrc}`);
+    const regex = /(?:\.([^.]+))?$/;
+    const extension = regex.exec(imageSrc)[1];
+    console.log(`extension:  ${extension}`);
+    if (!configuration.assetTypes.includes(extension)) {
+      document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
+    }
+  }
 
 
   // let blob = new Blob( [ data ], { type: "image/png" } );
@@ -143,21 +159,27 @@ function createInitiator(base) {
 // data chunking/parsing
 function sendAssetsToPeer(peer) {
   for (let i = 0; i < imageArray.length; i += 1) {
-    let data = getImgData(imageArray[i]);
-    let CHUNK_SIZE = 64000;
-    let n = data.length / CHUNK_SIZE;
-    for (let f = 0; f < n; f++) {
-      let start = f * CHUNK_SIZE;
-      let end = (f + 1) * CHUNK_SIZE;
-      peer.send(data.slice(start, end))
+    const imageSrc = imageArray[i].dataset.src;
+    const regex = /(?:\.([^.]+))?$/;
+    const extension = regex.exec(imageSrc)[1];
+
+    if (configuration.assetTypes.includes(extension)) {
+      let data = getImgData(imageArray[i]);
+      let CHUNK_SIZE = 64000;
+      let n = data.length / CHUNK_SIZE;
+      for (let f = 0; f < n; f++) {
+        let start = f * CHUNK_SIZE;
+        let end = (f + 1) * CHUNK_SIZE;
+        peer.send(data.slice(start, end))
+      }
+      if (data.length % CHUNK_SIZE) {
+        peer.send(data.slice(n * CHUNK_SIZE))
+      }
+      // console.log("All data chunks sent.");
+      peer.send(`FINISHED-YUY${i}`);
     }
-    if (data.length % CHUNK_SIZE) {
-      peer.send(data.slice(n * CHUNK_SIZE))
-    }
-    // console.log("All data chunks sent.");
-    peer.send(`FINISHED-YUY${i}`);
+    console.log('message sent')
   }
-  console.log('message sent')
 }
 
 // download assets from server

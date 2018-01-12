@@ -3,6 +3,5 @@ module.exports = {
   // if threshold = 3, fourth client will load from peers
   threshold: 1,
   assetTypes: ['jpg'],
-  lazyLoading: false,
   fold: false
 };

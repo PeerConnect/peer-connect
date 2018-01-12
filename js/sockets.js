@@ -174,15 +174,11 @@ function getImgData() {
 // download assets from server
 function loadAssetsFromServer() {
   console.log("LOAD ASSETS FROM SERVER");
-  // query DOM for test images
-  const image1 = document.getElementById("image1");
-  const image2 = document.getElementById("image2");
-  const image3 = document.getElementById("image3");
-  // if new client is the first on the page
-  // and has not downloaded assets yet
-  image1.setAttribute("src", "../assets/image1.jpg");
-  image2.setAttribute("src", "../assets/image2.png");
-  image3.setAttribute("src", "../assets/image3.jpg");
+
+  for (let i = 0; i < imageArray.length; i += 1) {
+    const imageSrc = imageArray[i].dataset.src;
+    document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
+  }
 
   document.getElementById('downloaded_from').innerHTML = 'Assets got from SERVER!!';
 }

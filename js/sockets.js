@@ -43,7 +43,7 @@ socket.on('create_base_initiator', () => {
 // Create receiver peer; server determined that this peer can be a receiver and sent a stored offer object from an avaliable initiator
 socket.on('create_receiver_peer', message => {
   console.log('creating receiver peer')
-  p = new Peer({initiator: false, trickle: true})
+  p = new Peer({ initiator: false, trickle: true })
   peerMethods(p)
   // peerId is the socket id of the avaliable initiator that this peer will pair with
   peerId = message.peerId
@@ -62,12 +62,12 @@ function handleOnSignal(data) {
   // send offer object to server for server to store
   if (data.type === 'offer') {
     console.log('Emitting offer_to_server.')
-    socket.emit('offer_to_server', {offer: data})
+    socket.emit('offer_to_server', { offer: data })
   }
   // send answer object to server for server to send to avaliable initiator
   if (data.type === 'answer') {
     console.log('Emitting answer_to_server.')
-    socket.emit('answer_to_server', {answer: data, peerId: peerId})
+    socket.emit('answer_to_server', { answer: data, peerId: peerId })
   }
   // After the offer/answer object is generated, ice candidates are generated as well. These are stored to be sent after the P2P connection is established.
   if (data.candidate) {
@@ -89,8 +89,12 @@ function handleOnConnect() {
 // handles when data is being received
 function handleOnData(data) {
   // check if receiving ice candidate
+<<<<<<< HEAD
   if (data.toString().slice(0,1) === '[') {
     console.log(data.toString());
+=======
+  if (data.slice(0, 1).toString() === '[') {
+>>>>>>> be45b2bcf21e4b56f28809f23470f0ddc653b679
     const receivedCandidates = JSON.parse(data)
     receivedCandidates.forEach(ele => {
       console.log('got candidate')
@@ -131,12 +135,12 @@ function handleOnData(data) {
 }
 
 // Creates an initiator (therefore emitting a signal that creates an offer). The base parameter determines if initiator should download assets from server (example: there are no other initiators connected or client's peer got disconnected).
-function createInitiator (base) {
+function createInitiator(base) {
   if (base) {
     loadAssetsFromServer();
     assetsDownloaded = true
   }
-  p = new Peer({initiator: true, trickle: false});
+  p = new Peer({ initiator: true, trickle: false });
   peerMethods(p)
 }
 
@@ -174,15 +178,11 @@ function getImgData() {
 // download assets from server
 function loadAssetsFromServer() {
   console.log("LOAD ASSETS FROM SERVER");
-  // query DOM for test images
-  const image1 = document.getElementById("image1");
-  const image2 = document.getElementById("image2");
-  const image3 = document.getElementById("image3");
-  // if new client is the first on the page
-  // and has not downloaded assets yet
-  image1.setAttribute("src", "../assets/image5.jpeg");
-  image2.setAttribute("src", "../assets/image1.jpg");
-  image3.setAttribute("src", "../assets/image3.jpg");
+
+  for (let i = 0; i < imageArray.length; i += 1) {
+    const imageSrc = imageArray[i].dataset.src;
+    document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
+  }
 
   document.getElementById('downloaded_from').innerHTML = 'Assets got from SERVER!!';
 }

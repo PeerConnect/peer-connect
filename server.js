@@ -9,6 +9,9 @@ const server = app.listen(PORT, () =>
   console.log(`App listening on port ${PORT}...`)
 );
 
+// PeerConnect configuration
+const peerConfig = require('./peer-config.js');
+
 // Serve static files
 app.use(express.static(path.join(__dirname, "/")));
 
@@ -44,11 +47,11 @@ io.on("connection", socket => {
 
   numClients++
   // create base initiator if no avaliable initiator
-  if (!numInitiators) {
+  if (numInitiators < peerConfig.threshold) {
     socket.emit('create_base_initiator')
   }
   // initiators avaliable, create receiver
-  if (numInitiators) {
+  if (numInitiators >= peerConfig.threshold) {
     // iterate through activeClients to find initiator avaliable initiator and make that initiator unavaliable (initiator key set to false). Update numInitiators and emit to receiver and send initiator data
     for (let id in activeClients) {
       if (activeClients[id].initiator) {

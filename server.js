@@ -61,7 +61,6 @@ io.on("connection", socket => {
         }
         activeClients[id].initiator = false
         numInitiators--
-        console.log('Emitting create r p', socket.id)
         socket.emit('create_receiver_peer', initiatorData)
         break;
       }

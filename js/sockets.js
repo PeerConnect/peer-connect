@@ -14,6 +14,19 @@ let candidates = [];
 // global variables for data parsing/transfer
 let imageData;
 let counter = 0;
+
+//used to time the asset load time
+const browserOpenTime = new Date();
+let currentTime = new Date();
+let peersConnectedTime;
+let dataReceivedTime;
+let connectionDestroyedTime;
+
+function reportTime(time, currentOrTotal, domId) {
+  time = new Date();
+  document.getElementById(domId).innerHTML += `${time - currentOrTotal} ms  `;
+  currentTime = new Date();
+}
 // get img tag nodes
 imageArray = document.getElementsByTagName('img');
 
@@ -65,14 +78,11 @@ function handleOnSignal(data) {
 // handles when peers are connected through P2P
 function handleOnConnect() {
   console.log('CONNECTED')
+  reportTime(peersConnectedTime, currentTime, 'time_to_connect');
   // send ice candidates if exist
   if (candidates.length) {
     p.send(JSON.stringify(candidates))
     candidates = []
-  }
-  // send assets if initiator
-  if (assetsDownloaded) {
-    sendAssetsToPeer(p)
   }
 }
 
@@ -82,20 +92,30 @@ function handleOnData(data) {
   if (data.slice(0, 1).toString() === '[') {
     const receivedCandidates = JSON.parse(data)
     receivedCandidates.forEach(ele => {
+      console.log('got candidate')
       p.signal(ele)
     })
     console.log('Received all ice candidates.')
+    // send assets if initiator
+    if (assetsDownloaded) {
+      sendAssetsToPeer(p)
+    }
     return;
   }
   if (data.slice(0, 12) == "FINISHED-YUY") {
     counter++;
     console.log("Received all data. Setting image.");
+    reportTime(dataReceivedTime, currentTime, 'time_to_receive');
+
     assetsDownloaded = true;
     imageArray[data.slice(12)].src = "data:" + imageData.slice(14);
     imageData = '';
     if (counter === imageArray.length) {
       console.log('DESTROYING PEERS');
-      p.destroy();
+      reportTime(connectionDestroyedTime, currentTime, 'time_to_destroy');
+      reportTime(connectionDestroyedTime, browserOpenTime, 'time_total');
+      p.destroy()
+      document.getElementById('downloaded_from').innerHTML = 'Assets got from PEER!!';
     }
   } else {
     imageData += data;
@@ -163,6 +183,8 @@ function loadAssetsFromServer() {
   image1.setAttribute("src", "../assets/image1.jpg");
   image2.setAttribute("src", "../assets/image2.png");
   image3.setAttribute("src", "../assets/image3.jpg");
+
+  document.getElementById('downloaded_from').innerHTML = 'Assets got from SERVER!!';
 }
 
 function getImgData(image) {

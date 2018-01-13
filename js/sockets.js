@@ -2,7 +2,7 @@ const Peer = SimplePeer;
 const peerMethods = listeners;
 
 // peer configuration object from server
-let configuration;
+let configuration = {};
 
 // placeholder for webrtc peer
 // track if assets have been downloaded, determines if peer can be an initiator
@@ -37,21 +37,23 @@ imageArray = document.getElementsByTagName('img');
 // Establish connection
 const socket = io.connect();
 // server is empty or assets downloaded so create initiator
-socket.on('create_base_initiator', peerConfig => {
+socket.on('create_base_initiator', (assetTypes, foldLoading) => {
   // save peer configuration object to front end for host
-  configuration = peerConfig;
+  configuration.assetTypes = assetTypes;
+  configuration.foldLoading = foldLoading;
   // download assets from server, create initiator peer
   // tell server assets were downloaded and send answer object to server (this happens when new peer is created with initiator key true)
   createInitiator(true)
 })
 // Create receiver peer; server determined that this peer can be a receiver and sent a stored offer object from an avaliable initiator
-socket.on('create_receiver_peer', (message, peerConfig) => {
+socket.on('create_receiver_peer', (message, assetTypes, foldLoading) => {
   console.log('creating receiver peer')
   // save peer configuration object to front end for peer
-  configuration = peerConfig;
+  configuration.assetTypes = assetTypes;
+  configuration.foldLoading = foldLoading;
   p = new Peer({ initiator: false, trickle: true })
   peerMethods(p)
-  loopImg();  
+  loopImg();
   // peerId is the socket id of the avaliable initiator that this peer will pair with
   peerId = message.peerId
   p.signal(message.offer)
@@ -94,19 +96,19 @@ function handleOnConnect() {
 }
 
 function loopImg() {
-    for (let i = 0; i < imageArray.length; i += 1) {
-      const imageSrc = imageArray[i].dataset.src;
-      const regex = /(?:\.([^.]+))?$/;
-      const extension = regex.exec(imageSrc)[1];
-      const foldLoading = configuration.foldLoading ? isElementInViewport(imageArray[i]) : false;
-      if (!configuration.assetTypes.includes(extension)) {
-        extCounter++;
-        document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
-      }
-      if (foldLoading) {
-        document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
-      }
+  for (let i = 0; i < imageArray.length; i += 1) {
+    const imageSrc = imageArray[i].dataset.src;
+    const regex = /(?:\.([^.]+))?$/;
+    const extension = regex.exec(imageSrc)[1];
+    const foldLoading = configuration.foldLoading ? isElementInViewport(imageArray[i]) : false;
+    if (!configuration.assetTypes.includes(extension)) {
+      extCounter++;
+      document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
     }
+    if (foldLoading) {
+      document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
+    }
+  }
 }
 
 // handles when data is being received
@@ -169,7 +171,7 @@ function sendAssetsToPeer(peer) {
     const imageSrc = imageArray[i].dataset.src;
     const regex = /(?:\.([^.]+))?$/;
     const extension = regex.exec(imageSrc)[1];
-
+    console.log(`#*#*#*#*# sendAssetsToPeer CONFIGURATION.foldLoading:  ${configuration.foldLoading} #*#*#*#*#`);
     if (configuration.assetTypes.includes(extension)) {
       let data = getImgData(imageArray[i]);
       let CHUNK_SIZE = 64000;

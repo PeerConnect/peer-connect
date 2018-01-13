@@ -13,9 +13,10 @@ let assetsDownloaded = false;
 let peerId = '';
 let candidates = [];
 
-// global variables for data parsing/transfer
+// global variables for data parsing/transfer and lazy image loading
 let imageData;
 let counter = 0;
+let extCounter = 0;
 
 //used to time the asset load time
 const browserOpenTime = new Date();
@@ -35,7 +36,6 @@ imageArray = document.getElementsByTagName('img');
 
 // Establish connection
 const socket = io.connect();
-
 // server is empty or assets downloaded so create initiator
 socket.on('create_base_initiator', peerConfig => {
   // save peer configuration object to front end for host
@@ -51,6 +51,7 @@ socket.on('create_receiver_peer', (message, peerConfig) => {
   configuration = peerConfig;
   p = new Peer({ initiator: false, trickle: true })
   peerMethods(p)
+  loopImg();  
   // peerId is the socket id of the avaliable initiator that this peer will pair with
   peerId = message.peerId
   p.signal(message.offer)
@@ -92,6 +93,22 @@ function handleOnConnect() {
   }
 }
 
+function loopImg() {
+    for (let i = 0; i < imageArray.length; i += 1) {
+      const imageSrc = imageArray[i].dataset.src;
+      const regex = /(?:\.([^.]+))?$/;
+      const extension = regex.exec(imageSrc)[1];
+      const foldLoading = configuration.foldLoading ? isElementInViewport(imageArray[i]) : false;
+      if (!configuration.assetTypes.includes(extension)) {
+        extCounter++;
+        document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
+      }
+      if (foldLoading) {
+        document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
+      }
+    }
+}
+
 // handles when data is being received
 function handleOnData(data) {
   // check if receiving ice candidate
@@ -110,18 +127,6 @@ function handleOnData(data) {
     return;
   }
 
-  for (let i = 0; i < imageArray.length; i += 1) {
-    const imageSrc = imageArray[i].dataset.src;
-    console.log(`imageSrc:  ${imageSrc}`);
-    const regex = /(?:\.([^.]+))?$/;
-    const extension = regex.exec(imageSrc)[1];
-    console.log(`extension:  ${extension}`);
-    if (!configuration.assetTypes.includes(extension)) {
-      document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
-    }
-  }
-
-
   // let blob = new Blob( [ data ], { type: "image/png" } );
   // console.log('DATA: ', new TextDecoder("utf-8").decode(data));
   // console.log('DATA: ', imageData);
@@ -129,10 +134,12 @@ function handleOnData(data) {
     counter++;
     console.log("Received all data for an image. Setting image.");
     reportTime(dataReceivedTime, currentTime, 'time_to_receive');
-    if (imageData.slice(0, 9) === 'undefined') imageArray[data.slice(12)].src = imageData.slice(9);
-    else imageArray[data.slice(12)].src = imageData
+    if (!isElementInViewport(imageArray[data.slice(12)])) {
+      if (imageData.slice(0, 9) === 'undefined') imageArray[data.slice(12)].src = imageData.slice(9);
+      else imageArray[data.slice(12)].src = imageData
+    }
     imageData = '';
-    if (counter === imageArray.length) {
+    if (counter + extCounter === imageArray.length) {
       console.log('All assets downloaded!');
       assetsDownloaded = true;
       console.log('DESTROYING PEERS');
@@ -204,4 +211,14 @@ function getImgData(image) {
   context.drawImage(img, 0, 0, img.width, img.height);
   // let myData = context.getImageData(0, 0, img.width, img.height);
   return canvas.toDataURL();
+}
+
+function isElementInViewport(el) {
+  const rect = el.getBoundingClientRect();
+  return (
+    rect.top >= 0 &&
+    rect.left >= 0 &&
+    rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+    rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+  );
 }

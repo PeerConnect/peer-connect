@@ -3,7 +3,7 @@ const path = require("path");
 const socket = require("socket.io");
 
 // App setup
-const PORT = 8080;
+const PORT = process.env.PORT || 8080;
 const app = express();
 const server = app.listen(PORT, () =>
   console.log(`App listening on port ${PORT}...`)
@@ -47,11 +47,13 @@ io.on("connection", socket => {
 
   numClients++
   // create base initiator if no avaliable initiator
+  console.log('OUR INIT: ', numInitiators);
   if (numInitiators < peerConfig.threshold) {
     socket.emit('create_base_initiator', peerConfig)
   }
   // initiators avaliable, create receiver
-  if (numInitiators >= peerConfig.threshold) {
+  // if (numInitiators >= peerConfig.threshold) {
+  else {
     // iterate through activeClients to find initiator avaliable initiator and make that initiator unavaliable (initiator key set to false). Update numInitiators and emit to receiver and send initiator data
     for (let id in activeClients) {
       if (activeClients[id].initiator) {

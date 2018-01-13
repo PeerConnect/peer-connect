@@ -110,13 +110,15 @@ function handleOnData(data) {
     return;
   }
 
+  // loop through all images
   for (let i = 0; i < imageArray.length; i += 1) {
     const imageSrc = imageArray[i].dataset.src;
-    console.log(`imageSrc:  ${imageSrc}`);
     const regex = /(?:\.([^.]+))?$/;
     const extension = regex.exec(imageSrc)[1];
-    console.log(`extension:  ${extension}`);
-    if (!configuration.assetTypes.includes(extension)) {
+    const foldLoading = configuration.foldLoading ? isElementInViewport(imageArray[i]) : false;
+    // load from server if file extension not listed in configuration.assetTypes
+    // or if configuration.foldLoading is set to true
+    if (!configuration.assetTypes.includes(extension) || foldLoading) {
       document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
     }
   }
@@ -204,4 +206,14 @@ function getImgData(image) {
   context.drawImage(img, 0, 0, img.width, img.height);
   // let myData = context.getImageData(0, 0, img.width, img.height);
   return canvas.toDataURL();
+}
+
+function isElementInViewport(el) {
+  const rect = el.getBoundingClientRect();
+  return (
+    rect.top >= 0 &&
+    rect.left >= 0 &&
+    rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+    rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+  );
 }

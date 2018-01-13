@@ -14,7 +14,7 @@ function listeners (peer) {
 
   // listener for when P2P is established. Ice candidates sent first, then media data itself.
   peer.on('connect', () => {
-    handleOnConnect()
+    handleOnConnect();
   })
 
   // listener for when data is being received

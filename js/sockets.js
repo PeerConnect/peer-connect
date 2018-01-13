@@ -93,6 +93,8 @@ function handleOnConnect() {
   }
 }
 
+let foldCounter = 0;
+
 function loopImg() {
     for (let i = 0; i < imageArray.length; i += 1) {
       const imageSrc = imageArray[i].dataset.src;
@@ -103,9 +105,10 @@ function loopImg() {
         extCounter++;
         document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
       }
-      if (foldLoading) {
-        document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
-      }
+      // if (foldLoading) {
+      //   foldCounter++;
+      //   document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
+      // }
     }
 }
 
@@ -134,10 +137,15 @@ function handleOnData(data) {
     counter++;
     console.log("Received all data for an image. Setting image.");
     reportTime(dataReceivedTime, currentTime, 'time_to_receive');
-    if (!isElementInViewport(imageArray[data.slice(12)])) {
+    // if (!isElementInViewport(imageArray[data.slice(12)])) {
+
       if (imageData.slice(0, 9) === 'undefined') imageArray[data.slice(12)].src = imageData.slice(9);
       else imageArray[data.slice(12)].src = imageData
-    }
+
+
+      const newImage = imageArray[data.slice(12)].dataset.src;
+      imageArray[data.slice(12)].onerror = imageNotFound(newImage);
+    // }
     imageData = '';
     if (counter + extCounter === imageArray.length) {
       console.log('All assets downloaded!');
@@ -174,7 +182,9 @@ function sendAssetsToPeer(peer) {
       let data = getImgData(imageArray[i]);
       let CHUNK_SIZE = 64000;
       let n = data.length / CHUNK_SIZE;
+
       for (let f = 0; f < n; f++) {
+
         let start = f * CHUNK_SIZE;
         let end = (f + 1) * CHUNK_SIZE;
         peer.send(data.slice(start, end))
@@ -221,4 +231,9 @@ function isElementInViewport(el) {
     rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
     rect.right <= (window.innerWidth || document.documentElement.clientWidth)
   );
+}
+
+function imageNotFound(imageSrc) {
+  console.log('this is not working!');
+  // document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
 }

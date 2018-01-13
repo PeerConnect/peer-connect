@@ -4,6 +4,6 @@ module.exports = {
   threshold: 1,
   // asset types to load from peers
   assetTypes: ['jpg', 'jpeg'],
-  // load images above the fold from server if fold: true
-  fold: true
+  // load images above the fold from server if foldLoading: true
+  foldLoading: true
 };

@@ -113,14 +113,12 @@ function handleOnData(data) {
   // loop through all images
   for (let i = 0; i < imageArray.length; i += 1) {
     const imageSrc = imageArray[i].dataset.src;
-    console.log(`imageSrc:  ${imageSrc}`);
     const regex = /(?:\.([^.]+))?$/;
     const extension = regex.exec(imageSrc)[1];
-    console.log(`extension:  ${extension}`);
-    // load from server if file extension not listed in config
-    // or if fold is set to true
-    console.log(`#*#*#*# isElementInViewport(imageArray[i]:  ${isElementInViewport(imageArray[i])}`);
-    if (!configuration.assetTypes.includes(extension) || isElementInViewport(imageArray[i])) {
+    const foldLoading = configuration.foldLoading ? isElementInViewport(imageArray[i]) : false;
+    // load from server if file extension not listed in configuration.assetTypes
+    // or if configuration.foldLoading is set to true
+    if (!configuration.assetTypes.includes(extension) || foldLoading) {
       document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
     }
   }

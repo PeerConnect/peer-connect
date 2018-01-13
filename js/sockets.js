@@ -2,7 +2,7 @@ const Peer = SimplePeer;
 const peerMethods = listeners;
 
 // peer configuration object from server
-let configuration;
+let configuration = {};
 
 // placeholder for webrtc peer
 // track if assets have been downloaded, determines if peer can be an initiator
@@ -37,20 +37,20 @@ imageArray = document.getElementsByTagName('img');
 // Establish connection
 const socket = io.connect();
 // server is empty or assets downloaded so create initiator
-socket.on('create_base_initiator', peerConfig => {
+socket.on('create_base_initiator', (assetTypes, foldLoading) => {
   // save peer configuration object to front end for host
-  configuration = peerConfig;
-  console.log(`#*#*#*#*# create_base_initiator CONFIGURATION.foldLoading:  ${configuration.foldLoading} #*#*#*#*#`);
+  configuration.assetTypes = assetTypes;
+  configuration.foldLoading = foldLoading;
   // download assets from server, create initiator peer
   // tell server assets were downloaded and send answer object to server (this happens when new peer is created with initiator key true)
   createInitiator(true)
 })
 // Create receiver peer; server determined that this peer can be a receiver and sent a stored offer object from an avaliable initiator
-socket.on('create_receiver_peer', (message, peerConfig) => {
+socket.on('create_receiver_peer', (message, assetTypes, foldLoading) => {
   console.log('creating receiver peer')
   // save peer configuration object to front end for peer
-  configuration = peerConfig;
-  console.log(`#*#*#*#*# create_receiver_peer CONFIGURATION.foldLoading:  ${configuration.foldLoading} #*#*#*#*#`);
+  configuration.assetTypes = assetTypes;
+  configuration.foldLoading = foldLoading;
   p = new Peer({ initiator: false, trickle: true })
   peerMethods(p)
   loopImg();

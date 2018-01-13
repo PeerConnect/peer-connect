@@ -9,6 +9,8 @@ const server = app.listen(PORT, () =>
   console.log(`App listening on port ${PORT}...`)
 );
 
+// test
+
 // PeerConnect configuration
 const peerConfig = require('./peer-config.js');
 

@@ -102,6 +102,10 @@ function handleOnConnect() {
     p.send(JSON.stringify(candidates))
     candidates = []
   }
+  // send assets if initiator
+  if (assetsDownloaded) {
+    sendAssetsToPeer(p)
+  }
 }
 
 let foldCounter = 0;
@@ -149,10 +153,6 @@ function handleOnData(data) {
       p.signal(ele)
     })
     console.log('Received all ice candidates.')
-    // send assets if initiator
-    if (assetsDownloaded) {
-      sendAssetsToPeer(p)
-    }
     return;
   }
 

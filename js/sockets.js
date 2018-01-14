@@ -46,23 +46,32 @@ socket.on('create_base_initiator', (assetTypes, foldLoading) => {
   createInitiator(true)
 })
 // Create receiver peer; server determined that this peer can be a receiver and sent a stored offer object from an avaliable initiator
-socket.on('create_receiver_peer', (message, assetTypes, foldLoading) => {
+socket.on('create_receiver_peer', (initiatorData, assetTypes, foldLoading) => {
   console.log('creating receiver peer')
   // save peer configuration object to front end for peer
   configuration.assetTypes = assetTypes;
   configuration.foldLoading = foldLoading;
   p = new Peer({ initiator: false, trickle: true })
   peerMethods(p)
+  p.signal(initiatorData.offer)
   loopImg();
   // peerId is the socket id of the avaliable initiator that this peer will pair with
-  peerId = message.peerId
-  p.signal(message.offer)
+  peerId = initiatorData.peerId
+  // location data of peer to render on page for demo
+  const location = initiatorData.location
+  document.getElementById('peer_info').innerHTML +=
+  `<br>*    Received data from ${location.city},  ${location.country} ${location.zipCode};`;
 })
 
 // answer object has arrived to the initiator. Connection will when the signal(message) is invoked.
-socket.on('answer_to_initiator', message => {
+socket.on('answer_to_initiator', (message, peerLocation) => {
   console.log('answer_to_initiator')
   // this final signal where initiator receives the answer does not call handleOnSignal/.on('signal'), it goes handleOnConnect.
+
+  // location data of peer to render on page for demo
+  document.getElementById('peer_info').innerHTML +=
+  `<br>*    Sent data to ${peerLocation.city},  ${peerLocation.country} ${peerLocation.zipCode};`;
+
   p.signal(message)
 })
 
@@ -115,7 +124,6 @@ function loopImg() {
 function handleOnData(data) {
   // check if receiving ice candidate
   if (data.toString().slice(0, 1) === '[') {
-    console.log(data.toString());
     const receivedCandidates = JSON.parse(data)
     receivedCandidates.forEach(ele => {
       console.log('got candidate')
@@ -148,7 +156,7 @@ function handleOnData(data) {
       reportTime(connectionDestroyedTime, currentTime, 'time_to_destroy');
       reportTime(connectionDestroyedTime, browserOpenTime, 'time_total');
       p.destroy()
-      document.getElementById('downloaded_from').innerHTML = 'Assets got from PEER!!';
+      document.getElementById('downloaded_from').innerHTML = 'Assets downloaded from: PEER!!!';
     }
   } else {
     imageData += data.toString();
@@ -200,7 +208,7 @@ function loadAssetsFromServer() {
     document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
   }
 
-  document.getElementById('downloaded_from').innerHTML = 'Assets got from SERVER!!';
+  document.getElementById('downloaded_from').innerHTML = ' Assets downloaded from: SERVER!!!';
 }
 
 function getImgData(image) {

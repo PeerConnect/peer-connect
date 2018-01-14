@@ -98,6 +98,7 @@ function handleOnConnect() {
   reportTime(peersConnectedTime, currentTime, 'time_to_connect');
   // send ice candidates if exist
   if (candidates.length) {
+    console.log(`Sending ${candidates.length} ice candidates.`)
     p.send(JSON.stringify(candidates))
     candidates = []
   }

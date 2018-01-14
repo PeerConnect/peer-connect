@@ -128,6 +128,7 @@ function createReceiverPeer(socket, activeClients, config, serverStats) {
 // function to calculate distance
 // source: https://www.geodatasource.com/developers/javascript
 function distance(lat1, lon1, lat2, lon2) {
+  console.log('am i being called')
 	const radlat1 = Math.PI * lat1/180
 	const radlat2 = Math.PI * lat2/180
 	const theta = lon1-lon2
@@ -136,6 +137,7 @@ function distance(lat1, lon1, lat2, lon2) {
 	dist = Math.acos(dist)
 	dist = dist * 180/Math.PI
 	dist = dist * 60 * 1.1515
+  console.log('dist', dist)
 	return dist
 }
 

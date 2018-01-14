@@ -133,7 +133,6 @@ function distance(lat1, lon1, lat2, lon2) {
 	dist = Math.acos(dist)
 	dist = dist * 180/Math.PI
 	dist = dist * 60 * 1.1515
-  console.log(dist)
 	return dist
 }
 

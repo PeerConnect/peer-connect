@@ -31,7 +31,7 @@ function reportTime(time, currentOrTotal, domId) {
   currentTime = new Date();
 }
 // get img tag nodes
-imageArray = document.getElementsByTagName('img');
+let imageArray = document.getElementsByTagName('img');
 
 
 // Establish connection
@@ -67,12 +67,11 @@ socket.on('create_receiver_peer', (initiatorData, assetTypes, foldLoading) => {
 socket.on('answer_to_initiator', (message, peerLocation) => {
   console.log('answer_to_initiator')
   // this final signal where initiator receives the answer does not call handleOnSignal/.on('signal'), it goes handleOnConnect.
+  p.signal(message)
 
   // location data of peer to render on page for demo
   document.getElementById('peer_info').innerHTML +=
   `<br>*    Sent data to ${peerLocation.city},  ${peerLocation.country} ${peerLocation.zipCode};`;
-
-  p.signal(message)
 })
 
 // handles all signals
@@ -104,22 +103,41 @@ function handleOnConnect() {
   }
 }
 
+let foldCounter = 0;
+let otherCounter = 0;
+
 function loopImg() {
-  for (let i = 0; i < imageArray.length; i += 1) {
-    const imageSrc = imageArray[i].dataset.src;
-    const regex = /(?:\.([^.]+))?$/;
-    const extension = regex.exec(imageSrc)[1];
-    const foldLoading = configuration.foldLoading ? isElementInViewport(imageArray[i]) : false;
-    if (!configuration.assetTypes.includes(extension)) {
-      extCounter++;
-      document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
-    }
-    if (foldLoading) {
-      document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
+  let returnFunc = function() {
+    console.log('this is firing!')
+
+    if (otherCounter >= 1) return;
+    for (let i = 0; i < imageArray.length; i += 1) {
+      const imageSrc = imageArray[i].dataset.src;
+      const regex = /(?:\.([^.]+))?$/;
+      const extension = regex.exec(imageSrc)[1];
+      const foldLoading = configuration.foldLoading ? isElementInViewport(imageArray[i]) : false;
+
+      console.log('!configuration.assetTypes.includes(extension): ', !configuration.assetTypes.includes(extension));
+      console.log('foldLoading: ', foldLoading);
+
+      if (!configuration.assetTypes.includes(extension)) {
+        extCounter++;
+        document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
+      }
+      if (foldLoading) {
+        foldCounter++;
+        document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
+      }
+      otherCounter++;
     }
   }
+  console.log(otherCounter);
+  return returnFunc();
 }
 
+
+
+let imageHeight;
 // handles when data is being received
 function handleOnData(data) {
   // check if receiving ice candidate
@@ -137,6 +155,14 @@ function handleOnData(data) {
     return;
   }
 
+  if (data.toString().slice(0,7) === 'test123') {
+    imageHeight = JSON.parse(data.toString().slice(7));
+    imageHeight.forEach((element, idx) => {
+      imageArray[idx].style.height = element + 'px';
+    })
+    return;
+  }
+  loopImg();
   // let blob = new Blob( [ data ], { type: "image/png" } );
   // console.log('DATA: ', new TextDecoder("utf-8").decode(data));
   // console.log('DATA: ', imageData);
@@ -145,8 +171,13 @@ function handleOnData(data) {
     console.log("Received all data for an image. Setting image.");
     reportTime(dataReceivedTime, currentTime, 'time_to_receive');
     if (!isElementInViewport(imageArray[data.slice(12)])) {
+
       if (imageData.slice(0, 9) === 'undefined') imageArray[data.slice(12)].src = imageData.slice(9);
       else imageArray[data.slice(12)].src = imageData
+
+
+      const newImage = imageArray[data.slice(12)].dataset.src;
+      imageArray[data.slice(12)].onerror = imageNotFound(newImage);
     }
     imageData = '';
     if (counter + extCounter === imageArray.length) {
@@ -175,6 +206,13 @@ function createInitiator(base) {
 
 // data chunking/parsing
 function sendAssetsToPeer(peer) {
+  let array = [];
+  for (let f = 0; f < imageArray.length; f++) {
+    array.push(imageArray[f].height);
+  }
+  peer.send('test123' + JSON.stringify(array));
+
+
   for (let i = 0; i < imageArray.length; i += 1) {
     const imageSrc = imageArray[i].dataset.src;
     const regex = /(?:\.([^.]+))?$/;
@@ -184,7 +222,9 @@ function sendAssetsToPeer(peer) {
       let data = getImgData(imageArray[i]);
       let CHUNK_SIZE = 64000;
       let n = data.length / CHUNK_SIZE;
+
       for (let f = 0; f < n; f++) {
+
         let start = f * CHUNK_SIZE;
         let end = (f + 1) * CHUNK_SIZE;
         peer.send(data.slice(start, end))
@@ -231,4 +271,9 @@ function isElementInViewport(el) {
     rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
     rect.right <= (window.innerWidth || document.documentElement.clientWidth)
   );
+}
+
+function imageNotFound(imageSrc) {
+  console.log('this is not working!');
+  // document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
 }

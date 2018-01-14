@@ -51,7 +51,7 @@ socket.on('create_receiver_peer', (initiatorData, assetTypes, foldLoading) => {
   // save peer configuration object to front end for peer
   configuration.assetTypes = assetTypes;
   configuration.foldLoading = foldLoading;
-  p = new Peer({ initiator: false, trickle: false })
+  p = new Peer({ initiator: false, trickle: false, reconnectTimer: 100 })
   peerMethods(p)
   p.signal(initiatorData.offer)
   loopImg();
@@ -66,7 +66,6 @@ socket.on('create_receiver_peer', (initiatorData, assetTypes, foldLoading) => {
 // answer object has arrived to the initiator. Connection will when the signal(message) is invoked.
 socket.on('answer_to_initiator', (message, peerLocation) => {
   console.log('answer_to_initiator')
-  console.log(p.trickle)
   console.log(message)
   // this final signal where initiator receives the answer does not call handleOnSignal/.on('signal'), it goes handleOnConnect.
   p.signal(message)
@@ -203,7 +202,7 @@ function createInitiator(base) {
     loadAssetsFromServer();
     assetsDownloaded = true
   }
-  p = new Peer({ initiator: true, trickle: false });
+  p = new Peer({ initiator: true, trickle: false, reconnectTimer: 100 });
   peerMethods(p)
 }
 

@@ -51,7 +51,7 @@ socket.on('create_receiver_peer', (initiatorData, assetTypes, foldLoading) => {
   // save peer configuration object to front end for peer
   configuration.assetTypes = assetTypes;
   configuration.foldLoading = foldLoading;
-  p = new Peer({ initiator: false, trickle: true })
+  p = new Peer({ initiator: false, trickle: false })
   peerMethods(p)
   p.signal(initiatorData.offer)
   loopImg();

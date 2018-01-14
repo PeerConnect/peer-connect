@@ -51,7 +51,21 @@ socket.on('create_receiver_peer', (initiatorData, assetTypes, foldLoading) => {
   // save peer configuration object to front end for peer
   configuration.assetTypes = assetTypes;
   configuration.foldLoading = foldLoading;
-  p = new Peer({ initiator: false, trickle: false, reconnectTimer: 100 })
+  p = new Peer({
+    initiator: false,
+    trickle: false,
+    reconnectTimer: 100,
+    config: {
+      iceServers: [
+        { url: 'stun:stun.l.google.com:19302' },
+        {
+        	url: 'turn:numb.viagenie.ca',
+        	credential: 'muazkh',
+        	username: 'webrtc@live.com'
+        }
+      ]
+    }
+  })
   peerMethods(p)
   p.signal(initiatorData.offer)
   loopImg();

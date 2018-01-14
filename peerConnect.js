@@ -44,6 +44,7 @@ function PeerConnect(config, server) {
         lat: json.latitude,
         city: json.city,
         zipCode: json.zip_code,
+        regionCode: json.region_code,
         country: json.country_code
       }
       this.activeClients[socket.id].location = location
@@ -104,6 +105,8 @@ function createReceiverPeer(socket, activeClients, config, serverStats) {
     if (activeClients[id].initiator) {
       tempLocation = activeClients[id].location
       tempDistance = distance(clientLocation.lat, clientLocation.lgn, tempLocation.lat, tempLocation.lgn)
+      // logging distance
+      console.log("tempdist, closestPeerdist : ", tempDistance, closestPeer.distance)
       if (tempDistance < closestPeer.distance) {
         closestPeer.id = id
         closestPeer.distance = distance

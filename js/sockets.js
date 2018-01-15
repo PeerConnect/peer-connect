@@ -53,7 +53,7 @@ socket.on('create_receiver_peer', (initiatorData, assetTypes, foldLoading) => {
   configuration.foldLoading = foldLoading;
   p = new Peer({
     initiator: false,
-    trickle: true,
+    trickle: false,
     reconnectTimer: 100
   })
   peerMethods(p)
@@ -106,10 +106,10 @@ function handleOnConnect() {
     p.send(JSON.stringify(candidates))
     candidates = []
   }
-  // // send assets if initiator
-  // if (assetsDownloaded) {
-  //   sendAssetsToPeer(p)
-  // }
+  // send assets if initiator (uncomment this if trickle off for receiver)
+  if (assetsDownloaded) {
+    sendAssetsToPeer(p)
+  }
 }
 
 let foldCounter = 0;
@@ -157,10 +157,11 @@ function handleOnData(data) {
       p.signal(ele)
     })
     console.log('Received all ice candidates.')
-    // send assets if initiator
-    if (assetsDownloaded) {
-      sendAssetsToPeer(p)
-    }
+    // // send assets if initiator
+    // // uncomment this if receiver trickle on
+    // if (assetsDownloaded) {
+    //   sendAssetsToPeer(p)
+    // }
     return;
   }
 

@@ -113,55 +113,13 @@ function handleOnConnect() {
   }
 }
 
-<<<<<<< HEAD
-=======
-let foldCounter = 0;
-let otherCounter = 0;
-
-function loopImg() {
-  let returnFunc = function() {
-    console.log('this is firing!')
-
-    if (otherCounter >= 1) return;
-    for (let i = 0; i < imageArray.length; i += 1) {
-      const imageSrc = imageArray[i].dataset.src;
-      const regex = /(?:\.([^.]+))?$/;
-      const extension = regex.exec(imageSrc)[1];
-      const foldLoading = configuration.foldLoading ? isElementInViewport(imageArray[i]) : false;
-
-      console.log('!configuration.assetTypes.includes(extension): ', !configuration.assetTypes.includes(extension));
-      console.log('foldLoading: ', foldLoading);
-
-      if (!configuration.assetTypes.includes(extension)) {
-        extCounter++;
-        document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
-      }
-      if (foldLoading) {
-        foldCounter++;
-        document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
-      }
-      otherCounter++;
-    }
-  }
-  console.log(otherCounter);
-  return returnFunc();
-}
-
-
-
->>>>>>> d0bf9d18ffe75a3603cba1bd2dcf0efa72302663
 let imageHeight;
 // handles when data is being received
 
 function handleOnData(data) {
-<<<<<<< HEAD
   let dataString = data.toString();
 
   if (dataString.slice(0, 1) === '[') {
-=======
-  // check if receiving ice candidate
-  if (data.toString().slice(0, 1) === '[') {
->>>>>>> d0bf9d18ffe75a3603cba1bd2dcf0efa72302663
     const receivedCandidates = JSON.parse(data)
     receivedCandidates.forEach(ele => {
       console.log('got candidate')
@@ -180,18 +138,6 @@ function handleOnData(data) {
     setImageHeights(dataString, imageArray);
     return;
   }
-<<<<<<< HEAD
-=======
-  loopImg();
-  // let blob = new Blob( [ data ], { type: "image/png" } );
-  // console.log('DATA: ', new TextDecoder("utf-8").decode(data));
-  // console.log('DATA: ', imageData);
-  if (data.toString().slice(0, 12) == "FINISHED-YUY") {
-    counter++;
-    console.log("Received all data for an image. Setting image.");
-    reportTime(dataReceivedTime, currentTime, 'time_to_receive');
-    if (!isElementInViewport(imageArray[data.slice(12)])) {
->>>>>>> d0bf9d18ffe75a3603cba1bd2dcf0efa72302663
 
   loopImage();  
 
@@ -206,13 +152,8 @@ function handleOnData(data) {
       console.log('DESTROYING PEERS');
       reportTime(connectionDestroyedTime, currentTime, 'time_to_destroy');
       reportTime(connectionDestroyedTime, browserOpenTime, 'time_total');
-<<<<<<< HEAD
       p.destroy();
       document.getElementById('downloaded_from').innerHTML = 'Assets got from PEER!!';
-=======
-      p.destroy()
-      document.getElementById('downloaded_from').innerHTML = 'Assets downloaded from: PEER!!!';
->>>>>>> d0bf9d18ffe75a3603cba1bd2dcf0efa72302663
     }
   } else {
     imageData += dataString;
@@ -319,12 +260,8 @@ function loadAssetsFromServer() {
     const imageSrc = imageArray[i].dataset.src;
     setServerImage(imageSrc);
   }
-<<<<<<< HEAD
-  document.getElementById('downloaded_from').innerHTML = 'Assets got from SERVER!!';
-=======
 
   document.getElementById('downloaded_from').innerHTML = ' Assets downloaded from: SERVER!!!';
->>>>>>> d0bf9d18ffe75a3603cba1bd2dcf0efa72302663
 }
 
 function getImgData(image) {
@@ -351,10 +288,7 @@ function imageNotFound(imageSrc) {
   console.log('this is not working!');
   // document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
 }
-<<<<<<< HEAD
 
 function setServerImage(imageSource) {
   document.querySelector(`[data-src='${imageSource}']`).setAttribute('src', `${imageSource}`);
 }
-=======
->>>>>>> d0bf9d18ffe75a3603cba1bd2dcf0efa72302663

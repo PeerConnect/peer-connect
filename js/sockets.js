@@ -47,23 +47,36 @@ socket.on('create_base_initiator', (assetTypes, foldLoading) => {
   createInitiator(true)
 })
 // Create receiver peer; server determined that this peer can be a receiver and sent a stored offer object from an avaliable initiator
-socket.on('create_receiver_peer', (message, assetTypes, foldLoading) => {
+socket.on('create_receiver_peer', (initiatorData, assetTypes, foldLoading) => {
   console.log('creating receiver peer')
   // save peer configuration object to front end for peer
   configuration.assetTypes = assetTypes;
   configuration.foldLoading = foldLoading;
-  p = new Peer({ initiator: false, trickle: true })
+  p = new Peer({
+    initiator: false,
+    trickle: false,
+    reconnectTimer: 100
+  })
   peerMethods(p)
+  p.signal(initiatorData.offer)
+  loopImg();
   // peerId is the socket id of the avaliable initiator that this peer will pair with
-  peerId = message.peerId
-  p.signal(message.offer)
+  peerId = initiatorData.peerId
+  // location data of peer to render on page for demo
+  const location = initiatorData.location
+  document.getElementById('peer_info').innerHTML +=
+  `<br>*    Received data from ${location.city}, ${location.regionCode}, ${location.country} ${location.zipCode};`;
 })
 
 // answer object has arrived to the initiator. Connection will when the signal(message) is invoked.
-socket.on('answer_to_initiator', message => {
+socket.on('answer_to_initiator', (message, peerLocation) => {
   console.log('answer_to_initiator')
   // this final signal where initiator receives the answer does not call handleOnSignal/.on('signal'), it goes handleOnConnect.
   p.signal(message)
+
+  // location data of peer to render on page for demo
+  document.getElementById('peer_info').innerHTML +=
+  `<br>*    Sent data to ${peerLocation.city}, ${peerLocation.regionCode}, ${peerLocation.country} ${peerLocation.zipCode};`;
 })
 
 // handles all signals
@@ -90,28 +103,76 @@ function handleOnConnect() {
   reportTime(peersConnectedTime, currentTime, 'time_to_connect');
   // send ice candidates if exist
   if (candidates.length) {
+    console.log(`Sending ${candidates.length} ice candidates.`)
     p.send(JSON.stringify(candidates))
     candidates = []
   }
+  // send assets if initiator (uncomment this if trickle off for receiver)
+  if (assetsDownloaded) {
+    sendAssetsToPeer(p)
+  }
 }
 
+<<<<<<< HEAD
+=======
+let foldCounter = 0;
+let otherCounter = 0;
+
+function loopImg() {
+  let returnFunc = function() {
+    console.log('this is firing!')
+
+    if (otherCounter >= 1) return;
+    for (let i = 0; i < imageArray.length; i += 1) {
+      const imageSrc = imageArray[i].dataset.src;
+      const regex = /(?:\.([^.]+))?$/;
+      const extension = regex.exec(imageSrc)[1];
+      const foldLoading = configuration.foldLoading ? isElementInViewport(imageArray[i]) : false;
+
+      console.log('!configuration.assetTypes.includes(extension): ', !configuration.assetTypes.includes(extension));
+      console.log('foldLoading: ', foldLoading);
+
+      if (!configuration.assetTypes.includes(extension)) {
+        extCounter++;
+        document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
+      }
+      if (foldLoading) {
+        foldCounter++;
+        document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
+      }
+      otherCounter++;
+    }
+  }
+  console.log(otherCounter);
+  return returnFunc();
+}
+
+
+
+>>>>>>> d0bf9d18ffe75a3603cba1bd2dcf0efa72302663
 let imageHeight;
 // handles when data is being received
 
 function handleOnData(data) {
+<<<<<<< HEAD
   let dataString = data.toString();
 
   if (dataString.slice(0, 1) === '[') {
+=======
+  // check if receiving ice candidate
+  if (data.toString().slice(0, 1) === '[') {
+>>>>>>> d0bf9d18ffe75a3603cba1bd2dcf0efa72302663
     const receivedCandidates = JSON.parse(data)
     receivedCandidates.forEach(ele => {
       console.log('got candidate')
       p.signal(ele)
     });
     console.log('Received all ice candidates.')
-    // send assets if initiator
-    if (assetsDownloaded) {
-      sendAssetsToPeer(p)
-    }
+    // // send assets if initiator
+    // // uncomment this if receiver trickle on
+    // if (assetsDownloaded) {
+    //   sendAssetsToPeer(p)
+    // }
     return;
   }
 
@@ -119,6 +180,18 @@ function handleOnData(data) {
     setImageHeights(dataString, imageArray);
     return;
   }
+<<<<<<< HEAD
+=======
+  loopImg();
+  // let blob = new Blob( [ data ], { type: "image/png" } );
+  // console.log('DATA: ', new TextDecoder("utf-8").decode(data));
+  // console.log('DATA: ', imageData);
+  if (data.toString().slice(0, 12) == "FINISHED-YUY") {
+    counter++;
+    console.log("Received all data for an image. Setting image.");
+    reportTime(dataReceivedTime, currentTime, 'time_to_receive');
+    if (!isElementInViewport(imageArray[data.slice(12)])) {
+>>>>>>> d0bf9d18ffe75a3603cba1bd2dcf0efa72302663
 
   loopImage();  
 
@@ -133,8 +206,13 @@ function handleOnData(data) {
       console.log('DESTROYING PEERS');
       reportTime(connectionDestroyedTime, currentTime, 'time_to_destroy');
       reportTime(connectionDestroyedTime, browserOpenTime, 'time_total');
+<<<<<<< HEAD
       p.destroy();
       document.getElementById('downloaded_from').innerHTML = 'Assets got from PEER!!';
+=======
+      p.destroy()
+      document.getElementById('downloaded_from').innerHTML = 'Assets downloaded from: PEER!!!';
+>>>>>>> d0bf9d18ffe75a3603cba1bd2dcf0efa72302663
     }
   } else {
     imageData += dataString;
@@ -185,7 +263,11 @@ function createInitiator(base) {
     loadAssetsFromServer();
     assetsDownloaded = true
   }
-  p = new Peer({ initiator: true, trickle: false });
+  p = new Peer({
+    initiator: true,
+    trickle: false,
+    reconnectTimer: 100
+  });
   peerMethods(p)
 }
 
@@ -237,7 +319,12 @@ function loadAssetsFromServer() {
     const imageSrc = imageArray[i].dataset.src;
     setServerImage(imageSrc);
   }
+<<<<<<< HEAD
   document.getElementById('downloaded_from').innerHTML = 'Assets got from SERVER!!';
+=======
+
+  document.getElementById('downloaded_from').innerHTML = ' Assets downloaded from: SERVER!!!';
+>>>>>>> d0bf9d18ffe75a3603cba1bd2dcf0efa72302663
 }
 
 function getImgData(image) {
@@ -264,7 +351,10 @@ function imageNotFound(imageSrc) {
   console.log('this is not working!');
   // document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
 }
+<<<<<<< HEAD
 
 function setServerImage(imageSource) {
   document.querySelector(`[data-src='${imageSource}']`).setAttribute('src', `${imageSource}`);
 }
+=======
+>>>>>>> d0bf9d18ffe75a3603cba1bd2dcf0efa72302663

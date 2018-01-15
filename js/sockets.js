@@ -161,11 +161,6 @@ function loopImage() {
   return returnFunc();
 }
 
-function setServerImage(imageSource) {
-  document.querySelector(`[data-src='${imageSource}']`).setAttribute('src', `${imageSource}`);
-}
-
-
 function setImage (imageData, imageArray, index) {
   console.log('Received all data for an image. Setting image.');  
   counter++;
@@ -238,24 +233,20 @@ function sendImage(image, peer, imageIndex) {
 // download assets from server
 function loadAssetsFromServer() {
   console.log("LOAD ASSETS FROM SERVER");
-
   for (let i = 0; i < imageArray.length; i += 1) {
     const imageSrc = imageArray[i].dataset.src;
-    document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
+    setServerImage(imageSrc);
   }
-
   document.getElementById('downloaded_from').innerHTML = 'Assets got from SERVER!!';
 }
 
 function getImgData(image) {
   let canvas = document.createElement('canvas');
   let context = canvas.getContext('2d');
-  // let img = document.getElementById('image1');
   let img = image;
   context.canvas.width = img.width;
   context.canvas.height = img.height;
   context.drawImage(img, 0, 0, img.width, img.height);
-  // let myData = context.getImageData(0, 0, img.width, img.height);
   return canvas.toDataURL();
 }
 
@@ -272,4 +263,8 @@ function isElementInViewport(el) {
 function imageNotFound(imageSrc) {
   console.log('this is not working!');
   // document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
+}
+
+function setServerImage(imageSource) {
+  document.querySelector(`[data-src='${imageSource}']`).setAttribute('src', `${imageSource}`);
 }

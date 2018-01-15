@@ -70,9 +70,11 @@ socket.on('create_receiver_peer', (initiatorData, assetTypes, foldLoading) => {
   // peerId is the socket id of the avaliable initiator that this peer will pair with
   peerId = initiatorData.peerId
   // location data of peer to render on page for demo
-  const location = initiatorData.location
-  document.getElementById('peer_info').innerHTML +=
-  `<br>*    Received data from ${location.city}, ${location.regionCode}, ${location.country} ${location.zipCode};`;
+  if (initiatorData.location) {
+    const location = initiatorData.location
+    document.getElementById('peer_info').innerHTML +=
+    `<br>* Received data from ${location.city}, ${location.regionCode}, ${location.country} ${location.zipCode};`;
+  }
 })
 
 // answer object has arrived to the initiator. Connection will when the signal(message) is invoked.
@@ -82,8 +84,10 @@ socket.on('answer_to_initiator', (message, peerLocation) => {
   p.signal(message)
 
   // location data of peer to render on page for demo
-  document.getElementById('peer_info').innerHTML +=
-  `<br>*    Sent data to ${peerLocation.city}, ${peerLocation.regionCode}, ${peerLocation.country} ${peerLocation.zipCode};`;
+  if (peerLocation) {
+    document.getElementById('peer_info').innerHTML +=
+    `<br>* Sent data to ${peerLocation.city}, ${peerLocation.regionCode}, ${peerLocation.country} ${peerLocation.zipCode};`;
+  }
 })
 
 // handles all signals
@@ -302,5 +306,5 @@ function imageNotFound(imageSrc) {
 
 function checkForMobile() {
   testExp = new RegExp('Android|webOS|iPhone|iPad|BlackBerry|Windows Phone|Opera Mini|IEMobile|Mobile', 'i');
-  return testExp.test(navigator.userAgent) ? true : false
-}
+  return testExp.test(navigator.userAgent) ? true : false;
+};

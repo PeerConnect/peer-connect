@@ -30,7 +30,9 @@ const peerConfig = {
   // asset types to load from peers
   assetTypes: ['jpg', 'jpeg', 'png'],
   // load images above the fold from server if foldLoading: true
-  foldLoading: true
+  foldLoading: true,
+  // toggle geolocation for pairing peers
+  geolocate: true
 };
 
 PeerConnect(peerConfig, server);

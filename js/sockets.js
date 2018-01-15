@@ -54,7 +54,7 @@ socket.on('create_receiver_peer', (initiatorData, assetTypes, foldLoading) => {
   p = new Peer({
     initiator: false,
     trickle: true,
-    reconnectTimer: 100,
+    reconnectTimer: 100
   })
   peerMethods(p)
   p.signal(initiatorData.offer)

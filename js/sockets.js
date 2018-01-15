@@ -8,6 +8,8 @@ let configuration = {};
 // track if assets have been downloaded, determines if peer can be an initiator
 // peerID is the the socket.id of the initiator that the receiver gets so the server can send back the answer object directly to the specific initiator
 // candidates is an array of the ice candidates to send to the peer once P2P connection is established
+// socket placeholder is for when page is opened on mobile.
+// if no placeholder, browser logs reference error to socket.
 let socket = {on: () => {}}
 let p = null;
 let assetsDownloaded = false;
@@ -35,8 +37,9 @@ function reportTime(time, currentOrTotal, domId) {
 let imageArray = document.getElementsByTagName('img');
 
 // checks if broswer is opened from mobile
-const isMobile = checkForMobile()
+let isMobile = checkForMobile()
 console.log('Am I on mobile?: ', isMobile)
+isMobile = false;
 
 // Establish connection if not mobile
 // if mobile load from server and don't create a socket connection

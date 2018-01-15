@@ -28,7 +28,7 @@ const peerConfig = {
   // if threshold = 3, fourth client will load from peers
   threshold: 1,
   // asset types to load from peers
-  assetTypes: ['jpg', 'jpeg'],
+  assetTypes: ['jpg', 'jpeg', 'png'],
   // load images above the fold from server if foldLoading: true
   foldLoading: true
 };

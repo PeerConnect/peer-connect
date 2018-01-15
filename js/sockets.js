@@ -28,6 +28,11 @@ let connectionDestroyedTime;
 // get img tag nodes
 let imageArray = document.getElementsByTagName('img');
 
+//assign ids to image
+for (let key in imageArray) {
+  if (!isNaN(key)) imageArray[key].setAttribute('id', key);
+}
+
 
 // Establish connection
 const socket = io.connect();
@@ -61,7 +66,7 @@ socket.on('create_receiver_peer', (initiatorData, assetTypes, foldLoading) => {
   peerId = initiatorData.peerId
   // location data of peer to render on page for demo
   const location = initiatorData.location
-  document.getElementById('loading_gif').style.display = 'none';
+  document.getElementsByClassName('loading_gif')[0].style.display = 'none';
   document.getElementById('downloaded_from').innerHTML = 'Assets downloaded from a PEER!';
   document.getElementById('downloaded_from').style.display = '';
   document.getElementById('report').style.display = '';
@@ -201,7 +206,7 @@ function handleOnData(data) {
       reportTime(connectionDestroyedTime, currentTime, 'time_to_destroy');
       reportTime(connectionDestroyedTime, browserOpenTime, 'time_total');
       currentTime = new Date();
-      p.destroy()
+      p.destroy();
     }
   } else {
     imageData += data.toString();
@@ -212,7 +217,7 @@ function handleOnData(data) {
 function createInitiator(base) {
   if (base) {
     loadAssetsFromServer();
-    assetsDownloaded = true
+    assetsDownloaded = true;
   }
   p = new Peer({
     initiator: true,
@@ -261,7 +266,7 @@ function sendAssetsToPeer(peer) {
 function loadAssetsFromServer() {
   console.log("LOAD ASSETS FROM SERVER");
   // take off loading gif
-  document.getElementById('loading_gif').style.display = 'none';
+  document.getElementsByClassName('loading_gif')[0].style.display = 'none';
   for (let i = 0; i < imageArray.length; i += 1) {
     const imageSrc = imageArray[i].dataset.src;
     document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);

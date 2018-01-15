@@ -6,15 +6,29 @@
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>PeerConnect</title>
   <style>
+  @import url('https://fonts.googleapis.com/css?family=Open+Sans|Raleway:300,400');
+
+    body {
+      background-color: #E5E2DE;
+      font-family: 'Open Sans', sans-serif;
+    }
+
     h1 {
-      text-align: center
+      font-size: 60px;
+      font-weight: 300;
+      font-family:'Raleway', sans-serif;
+      text-align: center;
+      color:#9F2738;
     }
 
     img {
       width: 300px;
+      /*height: 300px;*/
+      /*overflow: hidden;*/
     }
 
     main {
+      text-align: center;
       max-width: 920px;
       margin: 0 auto;
     }
@@ -28,16 +42,20 @@
 </head>
 
 <body>
+  <!-- <img id="title_frame" data-src"" src="https://png.pngtree.com/element_origin_min_pic/16/12/17/2e5c1508201c1133fc48c953885dfcda.jpg"/> -->
   <h1>PeerConnect</h1>
-  <main style="text-align:center;">
-    <img id="loading_gif" data-src="" src="https://loading.io/spinners/pies/lg.pie-chart-loading-gif.gif" style="display:inline;"/>
+  <main>
+    <img class="loading_gif" data-src="" src="https://loading.io/spinners/pies/lg.pie-chart-loading-gif.gif" style="display:inline;"/>
     <div id="downloaded_from" style="display:none;">Assets downloaded from </div>
+    </br>
     <div id="peer_info" style="display:none;">Peer Info: </div>
+    </br>
     <div id="time_total_from_server"></div>
     <div id="report" style="display:none;">
       <div id="time_to_connect">Time it took to establish connection: </div>
       <div id="time_to_receive">Time it took to receive data: </div>
       <div id="time_to_destroy">Time it took to destroy connection: </div>
+      </br>
       <div id="time_total">Total time: </div>
     </div>
     <section id="image-container">

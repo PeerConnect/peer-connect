@@ -37,9 +37,8 @@ function reportTime(time, currentOrTotal, domId) {
 let imageArray = document.getElementsByTagName('img');
 
 // checks if broswer is opened from mobile
-let isMobile = checkForMobile()
+const isMobile = checkForMobile()
 console.log('Am I on mobile?: ', isMobile)
-isMobile = false;
 
 // Establish connection if not mobile
 // if mobile load from server and don't create a socket connection

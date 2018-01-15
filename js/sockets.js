@@ -25,11 +25,6 @@ let peersConnectedTime;
 let dataReceivedTime;
 let connectionDestroyedTime;
 
-function reportTime(time, currentOrTotal, domId) {
-  time = new Date();
-  document.getElementById(domId).innerHTML += `${time - currentOrTotal} ms  `;
-  currentTime = new Date();
-}
 // get img tag nodes
 let imageArray = document.getElementsByTagName('img');
 
@@ -41,9 +36,12 @@ socket.on('create_base_initiator', (assetTypes, foldLoading) => {
   // save peer configuration object to front end for host
   configuration.assetTypes = assetTypes;
   configuration.foldLoading = foldLoading;
+  document.getElementById('downloaded_from').innerHTML = 'Assets downloaded from the SERVER!';
+  document.getElementById('downloaded_from').style.display = '';
   // download assets from server, create initiator peer
   // tell server assets were downloaded and send answer object to server (this happens when new peer is created with initiator key true)
   createInitiator(true)
+
 })
 // Create receiver peer; server determined that this peer can be a receiver and sent a stored offer object from an avaliable initiator
 socket.on('create_receiver_peer', (initiatorData, assetTypes, foldLoading) => {
@@ -63,6 +61,11 @@ socket.on('create_receiver_peer', (initiatorData, assetTypes, foldLoading) => {
   peerId = initiatorData.peerId
   // location data of peer to render on page for demo
   const location = initiatorData.location
+  document.getElementById('loading_gif').style.display = 'none';
+  document.getElementById('downloaded_from').innerHTML = 'Assets downloaded from a PEER!';
+  document.getElementById('downloaded_from').style.display = '';
+  document.getElementById('report').style.display = '';
+  document.getElementById('peer_info').style.display = '';
   document.getElementById('peer_info').innerHTML +=
   `<br>*    Received data from ${location.city}, ${location.regionCode}, ${location.country} ${location.zipCode};`;
 })
@@ -74,6 +77,7 @@ socket.on('answer_to_initiator', (message, peerLocation) => {
   p.signal(message)
 
   // location data of peer to render on page for demo
+  document.getElementById('peer_info').style.display = '';
   document.getElementById('peer_info').innerHTML +=
   `<br>*    Sent data to ${peerLocation.city}, ${peerLocation.regionCode}, ${peerLocation.country} ${peerLocation.zipCode};`;
 })
@@ -196,8 +200,8 @@ function handleOnData(data) {
       console.log('DESTROYING PEERS');
       reportTime(connectionDestroyedTime, currentTime, 'time_to_destroy');
       reportTime(connectionDestroyedTime, browserOpenTime, 'time_total');
+      currentTime = new Date();
       p.destroy()
-      document.getElementById('downloaded_from').innerHTML = 'Assets downloaded from: PEER!!!';
     }
   } else {
     imageData += data.toString();
@@ -256,13 +260,14 @@ function sendAssetsToPeer(peer) {
 // download assets from server
 function loadAssetsFromServer() {
   console.log("LOAD ASSETS FROM SERVER");
-
+  // take off loading gif
+  document.getElementById('loading_gif').style.display = 'none';
   for (let i = 0; i < imageArray.length; i += 1) {
     const imageSrc = imageArray[i].dataset.src;
     document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
   }
-
-  document.getElementById('downloaded_from').innerHTML = ' Assets downloaded from: SERVER!!!';
+  // report time it took to load assets from server
+  document.getElementById('time_total_from_server').innerHTML = `Time it took to load from server: ${new Date() - browserOpenTime} ms  `;
 }
 
 function getImgData(image) {
@@ -273,6 +278,7 @@ function getImgData(image) {
   context.canvas.width = img.width;
   context.canvas.height = img.height;
   context.drawImage(img, 0, 0, img.width, img.height);
+
   // let myData = context.getImageData(0, 0, img.width, img.height);
   return canvas.toDataURL();
 }
@@ -290,4 +296,11 @@ function isElementInViewport(el) {
 function imageNotFound(imageSrc) {
   console.log('this is not working!');
   // document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
+}
+
+// function that reports time to DOM
+function reportTime(time, currentOrTotal, domId) {
+  time = new Date();
+  document.getElementById(domId).innerHTML += `${time - currentOrTotal} ms  `;
+  currentTime = new Date();
 }

@@ -29,10 +29,12 @@
 
 <body>
   <h1>PeerConnect</h1>
-  <main>
-    <div id="report">
-      <div id="downloaded_from">Assets downloaded from: </div>
-      <div id="peer_info">Peer Info: </div>
+  <main style="text-align:center;">
+    <img id="loading_gif" data-src="" src="https://loading.io/spinners/pies/lg.pie-chart-loading-gif.gif" style="display:inline;"/>
+    <div id="downloaded_from" style="display:none;">Assets downloaded from </div>
+    <div id="peer_info" style="display:none;">Peer Info: </div>
+    <div id="time_total_from_server"></div>
+    <div id="report" style="display:none;">
       <div id="time_to_connect">Time it took to establish connection: </div>
       <div id="time_to_receive">Time it took to receive data: </div>
       <div id="time_to_destroy">Time it took to destroy connection: </div>
@@ -48,7 +50,7 @@
       <div>
         <img data-src="../assets/image3.jpg">
       </div>
-      
+
       <div>
         <img data-src="../assets/image4.jpg">
       </div>
@@ -85,7 +87,6 @@
       <div>
         <img data-src="../assets/image15.jpg">
       </div>
->>>>>>> c3dd1a09335eda4dba4b9ee2ed385b9122614010
     </section>
   </main>
   <script src="/socket.io/socket.io.js"></script>

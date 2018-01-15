@@ -17,6 +17,7 @@ let candidates = [];
 let imageData;
 let counter = 0;
 let extCounter = 0;
+let otherCounter = 0;
 
 //used to time the asset load time
 const browserOpenTime = new Date();
@@ -94,42 +95,12 @@ function handleOnConnect() {
   }
 }
 
-let foldCounter = 0;
-let otherCounter = 0;
-
-function loopImg() {
-  let returnFunc = function() {
-    console.log('this is firing!')
-    
-    if (otherCounter >= 1) return;
-    for (let i = 0; i < imageArray.length; i += 1) {
-      const imageSrc = imageArray[i].dataset.src;
-      const regex = /(?:\.([^.]+))?$/;
-      const extension = regex.exec(imageSrc)[1];
-      const foldLoading = configuration.foldLoading ? isElementInViewport(imageArray[i]) : false;
-      if (!configuration.assetTypes.includes(extension)) {
-        extCounter++;
-        document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
-      }
-      if (foldLoading) {
-        foldCounter++;
-        document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
-      }
-      otherCounter++;
-    }
-  }
-  console.log(otherCounter);
-  return returnFunc();
-} 
-
-
-
 let imageHeight;
 // handles when data is being received
 
 function handleOnData(data) {
   let dataString = data.toString();
-  
+
   if (dataString.slice(0, 1) === '[') {
     const receivedCandidates = JSON.parse(data)
     receivedCandidates.forEach(ele => {
@@ -149,7 +120,7 @@ function handleOnData(data) {
     return;
   }
 
-  loopImg();  
+  loopImage();  
 
   if (dataString.slice(0, 12) == "FINISHED-YUY") {
     let imageIndex = data.slice(12);
@@ -169,6 +140,31 @@ function handleOnData(data) {
     imageData += dataString;
   }
 }
+
+function loopImage() {
+  let returnFunc = function() {    
+    if (otherCounter >= 1) return;
+    for (let i = 0; i < imageArray.length; i += 1) {
+      const imageSource = imageArray[i].dataset.src;
+      const extension = getImageType(imageArray[i]);
+      const foldLoading = configuration.foldLoading ? isElementInViewport(imageArray[i]) : false;
+      if (!configuration.assetTypes.includes(extension)) {
+        extCounter++;
+        setServerImage(imageSource);        
+      }
+      if (foldLoading) {
+        setServerImage(imageSource);
+      }
+    }
+    otherCounter++;
+  }
+  return returnFunc();
+}
+
+function setServerImage(imageSource) {
+  document.querySelector(`[data-src='${imageSource}']`).setAttribute('src', `${imageSource}`);
+}
+
 
 function setImage (imageData, imageArray, index) {
   console.log('Received all data for an image. Setting image.');  
@@ -275,5 +271,5 @@ function isElementInViewport(el) {
 
 function imageNotFound(imageSrc) {
   console.log('this is not working!');
-  document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
+  // document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
 }

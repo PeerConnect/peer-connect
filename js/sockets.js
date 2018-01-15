@@ -129,7 +129,7 @@ let imageHeight;
 
 function handleOnData(data) {
   let dataString = data.toString();
-  // check if receiving ice candidate
+  
   if (dataString.slice(0, 1) === '[') {
     const receivedCandidates = JSON.parse(data)
     receivedCandidates.forEach(ele => {
@@ -152,15 +152,9 @@ function handleOnData(data) {
   loopImg();  
 
   if (dataString.slice(0, 12) == "FINISHED-YUY") {
-    counter++;
-    console.log("Received all data for an image. Setting image.");
+    let imageIndex = data.slice(12);
     reportTime(dataReceivedTime, currentTime, 'time_to_receive');
-    if (!isElementInViewport(imageArray[data.slice(12)])) {
-      if (imageData.slice(0, 9) === 'undefined') imageArray[data.slice(12)].src = imageData.slice(9);
-      else imageArray[data.slice(12)].src = imageData
-      const newImage = imageArray[data.slice(12)].dataset.src;
-      imageArray[data.slice(12)].onerror = imageNotFound(newImage);
-    }
+    setImage(imageData, imageArray, imageIndex);
     imageData = '';
     if (counter + extCounter === imageArray.length) {
       console.log('All assets downloaded!');
@@ -168,11 +162,22 @@ function handleOnData(data) {
       console.log('DESTROYING PEERS');
       reportTime(connectionDestroyedTime, currentTime, 'time_to_destroy');
       reportTime(connectionDestroyedTime, browserOpenTime, 'time_total');
-      p.destroy()
+      p.destroy();
       document.getElementById('downloaded_from').innerHTML = 'Assets got from PEER!!';
     }
   } else {
     imageData += dataString;
+  }
+}
+
+function setImage (imageData, imageArray, index) {
+  console.log('Received all data for an image. Setting image.');  
+  counter++;
+  if (!isElementInViewport(imageArray[index])) {
+    if (imageData.slice(0, 9) === 'undefined') imageArray[index].src = imageData.slice(9);
+    else imageArray[index].src = imageData;
+    const newImage = imageArray[index].dataset.src;
+    imageArray[index].onerror = imageNotFound(newImage);
   }
 }
 
@@ -270,5 +275,5 @@ function isElementInViewport(el) {
 
 function imageNotFound(imageSrc) {
   console.log('this is not working!');
-  // document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
+  document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
 }

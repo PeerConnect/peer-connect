@@ -4,10 +4,11 @@ const peerMethods = listeners;
 // peer configuration object from server
 let configuration = {};
 
-// placeholder for webrtc peer
+// placeholder for webrtc peer and socket
 // track if assets have been downloaded, determines if peer can be an initiator
 // peerID is the the socket.id of the initiator that the receiver gets so the server can send back the answer object directly to the specific initiator
 // candidates is an array of the ice candidates to send to the peer once P2P connection is established
+let socket = {on: () => {}}
 let p = null;
 let assetsDownloaded = false;
 let peerId = '';
@@ -33,9 +34,14 @@ function reportTime(time, currentOrTotal, domId) {
 // get img tag nodes
 let imageArray = document.getElementsByTagName('img');
 
+// checks if broswer is opened from mobile
+const isMobile = checkForMobile()
+console.log('Am I on mobile?: ', isMobile)
 
-// Establish connection
-const socket = io.connect();
+// Establish connection if not mobile
+// if mobile load from server and don't create a socket connection
+isMobile ? loadAssetsFromServer() : socket = io.connect()
+
 // server is empty or assets downloaded so create initiator
 socket.on('create_base_initiator', (assetTypes, foldLoading) => {
   // save peer configuration object to front end for host
@@ -290,4 +296,9 @@ function isElementInViewport(el) {
 function imageNotFound(imageSrc) {
   console.log('this is not working!');
   // document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
+}
+
+function checkForMobile() {
+  testExp = new RegExp('Android|webOS|iPhone|iPad|BlackBerry|Windows Phone|Opera Mini|IEMobile|Mobile', 'i');
+  return testExp.test(navigator.userAgent) ? true : false
 }

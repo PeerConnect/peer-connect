@@ -53,18 +53,8 @@ socket.on('create_receiver_peer', (initiatorData, assetTypes, foldLoading) => {
   configuration.foldLoading = foldLoading;
   p = new Peer({
     initiator: false,
-    trickle: false,
+    trickle: true,
     reconnectTimer: 100,
-    config: {
-      iceServers: [
-        // { url: 'stun:stun.l.google.com:19302' },
-        {
-        	url: 'turn:numb.viagenie.ca',
-        	credential: 'muazkh',
-        	username: 'webrtc@live.com'
-        }
-      ]
-    }
   })
   peerMethods(p)
   p.signal(initiatorData.offer)
@@ -80,7 +70,6 @@ socket.on('create_receiver_peer', (initiatorData, assetTypes, foldLoading) => {
 // answer object has arrived to the initiator. Connection will when the signal(message) is invoked.
 socket.on('answer_to_initiator', (message, peerLocation) => {
   console.log('answer_to_initiator')
-  console.log(message)
   // this final signal where initiator receives the answer does not call handleOnSignal/.on('signal'), it goes handleOnConnect.
   p.signal(message)
 
@@ -117,10 +106,10 @@ function handleOnConnect() {
     p.send(JSON.stringify(candidates))
     candidates = []
   }
-  // send assets if initiator
-  if (assetsDownloaded) {
-    sendAssetsToPeer(p)
-  }
+  // // send assets if initiator
+  // if (assetsDownloaded) {
+  //   sendAssetsToPeer(p)
+  // }
 }
 
 let foldCounter = 0;
@@ -168,6 +157,10 @@ function handleOnData(data) {
       p.signal(ele)
     })
     console.log('Received all ice candidates.')
+    // send assets if initiator
+    if (assetsDownloaded) {
+      sendAssetsToPeer(p)
+    }
     return;
   }
 
@@ -216,7 +209,11 @@ function createInitiator(base) {
     loadAssetsFromServer();
     assetsDownloaded = true
   }
-  p = new Peer({ initiator: true, trickle: false, reconnectTimer: 100 });
+  p = new Peer({
+    initiator: true,
+    trickle: false,
+    reconnectTimer: 100
+  });
   peerMethods(p)
 }
 

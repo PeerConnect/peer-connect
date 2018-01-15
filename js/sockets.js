@@ -31,7 +31,7 @@ function reportTime(time, currentOrTotal, domId) {
   currentTime = new Date();
 }
 // get img tag nodes
-imageArray = document.getElementsByTagName('img');
+let imageArray = document.getElementsByTagName('img');
 
 
 // Establish connection
@@ -46,24 +46,36 @@ socket.on('create_base_initiator', (assetTypes, foldLoading) => {
   createInitiator(true)
 })
 // Create receiver peer; server determined that this peer can be a receiver and sent a stored offer object from an avaliable initiator
-socket.on('create_receiver_peer', (message, assetTypes, foldLoading) => {
+socket.on('create_receiver_peer', (initiatorData, assetTypes, foldLoading) => {
   console.log('creating receiver peer')
   // save peer configuration object to front end for peer
   configuration.assetTypes = assetTypes;
   configuration.foldLoading = foldLoading;
-  p = new Peer({ initiator: false, trickle: true })
+  p = new Peer({
+    initiator: false,
+    trickle: false,
+    reconnectTimer: 100
+  })
   peerMethods(p)
+  p.signal(initiatorData.offer)
   loopImg();
   // peerId is the socket id of the avaliable initiator that this peer will pair with
-  peerId = message.peerId
-  p.signal(message.offer)
+  peerId = initiatorData.peerId
+  // location data of peer to render on page for demo
+  const location = initiatorData.location
+  document.getElementById('peer_info').innerHTML +=
+  `<br>*    Received data from ${location.city}, ${location.regionCode}, ${location.country} ${location.zipCode};`;
 })
 
 // answer object has arrived to the initiator. Connection will when the signal(message) is invoked.
-socket.on('answer_to_initiator', message => {
+socket.on('answer_to_initiator', (message, peerLocation) => {
   console.log('answer_to_initiator')
   // this final signal where initiator receives the answer does not call handleOnSignal/.on('signal'), it goes handleOnConnect.
   p.signal(message)
+
+  // location data of peer to render on page for demo
+  document.getElementById('peer_info').innerHTML +=
+  `<br>*    Sent data to ${peerLocation.city}, ${peerLocation.regionCode}, ${peerLocation.country} ${peerLocation.zipCode};`;
 })
 
 // handles all signals
@@ -90,45 +102,77 @@ function handleOnConnect() {
   reportTime(peersConnectedTime, currentTime, 'time_to_connect');
   // send ice candidates if exist
   if (candidates.length) {
+    console.log(`Sending ${candidates.length} ice candidates.`)
     p.send(JSON.stringify(candidates))
     candidates = []
   }
-}
-
-function loopImg() {
-  for (let i = 0; i < imageArray.length; i += 1) {
-    const imageSrc = imageArray[i].dataset.src;
-    const regex = /(?:\.([^.]+))?$/;
-    const extension = regex.exec(imageSrc)[1];
-    const foldLoading = configuration.foldLoading ? isElementInViewport(imageArray[i]) : false;
-    if (!configuration.assetTypes.includes(extension)) {
-      extCounter++;
-      document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
-    }
-    if (foldLoading) {
-      document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
-    }
+  // send assets if initiator (uncomment this if trickle off for receiver)
+  if (assetsDownloaded) {
+    sendAssetsToPeer(p)
   }
 }
 
+let foldCounter = 0;
+let otherCounter = 0;
+
+function loopImg() {
+  let returnFunc = function() {
+    console.log('this is firing!')
+
+    if (otherCounter >= 1) return;
+    for (let i = 0; i < imageArray.length; i += 1) {
+      const imageSrc = imageArray[i].dataset.src;
+      const regex = /(?:\.([^.]+))?$/;
+      const extension = regex.exec(imageSrc)[1];
+      const foldLoading = configuration.foldLoading ? isElementInViewport(imageArray[i]) : false;
+
+      console.log('!configuration.assetTypes.includes(extension): ', !configuration.assetTypes.includes(extension));
+      console.log('foldLoading: ', foldLoading);
+
+      if (!configuration.assetTypes.includes(extension)) {
+        extCounter++;
+        document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
+      }
+      if (foldLoading) {
+        foldCounter++;
+        document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
+      }
+      otherCounter++;
+    }
+  }
+  console.log(otherCounter);
+  return returnFunc();
+}
+
+
+
+let imageHeight;
 // handles when data is being received
 function handleOnData(data) {
   // check if receiving ice candidate
   if (data.toString().slice(0, 1) === '[') {
-    console.log(data.toString());
     const receivedCandidates = JSON.parse(data)
     receivedCandidates.forEach(ele => {
       console.log('got candidate')
       p.signal(ele)
     })
     console.log('Received all ice candidates.')
-    // send assets if initiator
-    if (assetsDownloaded) {
-      sendAssetsToPeer(p)
-    }
+    // // send assets if initiator
+    // // uncomment this if receiver trickle on
+    // if (assetsDownloaded) {
+    //   sendAssetsToPeer(p)
+    // }
     return;
   }
 
+  if (data.toString().slice(0,7) === 'test123') {
+    imageHeight = JSON.parse(data.toString().slice(7));
+    imageHeight.forEach((element, idx) => {
+      imageArray[idx].style.height = element + 'px';
+    })
+    return;
+  }
+  loopImg();
   // let blob = new Blob( [ data ], { type: "image/png" } );
   // console.log('DATA: ', new TextDecoder("utf-8").decode(data));
   // console.log('DATA: ', imageData);
@@ -137,8 +181,13 @@ function handleOnData(data) {
     console.log("Received all data for an image. Setting image.");
     reportTime(dataReceivedTime, currentTime, 'time_to_receive');
     if (!isElementInViewport(imageArray[data.slice(12)])) {
+
       if (imageData.slice(0, 9) === 'undefined') imageArray[data.slice(12)].src = imageData.slice(9);
       else imageArray[data.slice(12)].src = imageData
+
+
+      const newImage = imageArray[data.slice(12)].dataset.src;
+      imageArray[data.slice(12)].onerror = imageNotFound(newImage);
     }
     imageData = '';
     if (counter + extCounter === imageArray.length) {
@@ -148,7 +197,7 @@ function handleOnData(data) {
       reportTime(connectionDestroyedTime, currentTime, 'time_to_destroy');
       reportTime(connectionDestroyedTime, browserOpenTime, 'time_total');
       p.destroy()
-      document.getElementById('downloaded_from').innerHTML = 'Assets got from PEER!!';
+      document.getElementById('downloaded_from').innerHTML = 'Assets downloaded from: PEER!!!';
     }
   } else {
     imageData += data.toString();
@@ -161,12 +210,23 @@ function createInitiator(base) {
     loadAssetsFromServer();
     assetsDownloaded = true
   }
-  p = new Peer({ initiator: true, trickle: false });
+  p = new Peer({
+    initiator: true,
+    trickle: false,
+    reconnectTimer: 100
+  });
   peerMethods(p)
 }
 
 // data chunking/parsing
 function sendAssetsToPeer(peer) {
+  let array = [];
+  for (let f = 0; f < imageArray.length; f++) {
+    array.push(imageArray[f].height);
+  }
+  peer.send('test123' + JSON.stringify(array));
+
+
   for (let i = 0; i < imageArray.length; i += 1) {
     const imageSrc = imageArray[i].dataset.src;
     const regex = /(?:\.([^.]+))?$/;
@@ -176,7 +236,9 @@ function sendAssetsToPeer(peer) {
       let data = getImgData(imageArray[i]);
       let CHUNK_SIZE = 64000;
       let n = data.length / CHUNK_SIZE;
+
       for (let f = 0; f < n; f++) {
+
         let start = f * CHUNK_SIZE;
         let end = (f + 1) * CHUNK_SIZE;
         peer.send(data.slice(start, end))
@@ -200,7 +262,7 @@ function loadAssetsFromServer() {
     document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
   }
 
-  document.getElementById('downloaded_from').innerHTML = 'Assets got from SERVER!!';
+  document.getElementById('downloaded_from').innerHTML = ' Assets downloaded from: SERVER!!!';
 }
 
 function getImgData(image) {
@@ -223,4 +285,9 @@ function isElementInViewport(el) {
     rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
     rect.right <= (window.innerWidth || document.documentElement.clientWidth)
   );
+}
+
+function imageNotFound(imageSrc) {
+  console.log('this is not working!');
+  // document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
 }

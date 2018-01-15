@@ -19,6 +19,7 @@
   "homepage": "https://github.com/PeerConnect/peer-connect#readme",
   "dependencies": {
     "express": "^4.16.2",
+    "node-fetch": "^1.7.3",
     "path": "^0.12.7",
     "simple-peer": "^8.2.0",
     "socket.io": "^2.0.4",

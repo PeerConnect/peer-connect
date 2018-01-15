@@ -4,10 +4,13 @@ const peerMethods = listeners;
 // peer configuration object from server
 let configuration = {};
 
-// placeholder for webrtc peer
+// placeholder for webrtc peer and socket
 // track if assets have been downloaded, determines if peer can be an initiator
 // peerID is the the socket.id of the initiator that the receiver gets so the server can send back the answer object directly to the specific initiator
 // candidates is an array of the ice candidates to send to the peer once P2P connection is established
+// socket placeholder is for when page is opened on mobile.
+// if no placeholder, browser logs reference error to socket.
+let socket = {on: () => {}}
 let p = null;
 let assetsDownloaded = false;
 let peerId = '';
@@ -34,9 +37,14 @@ function reportTime(time, currentOrTotal, domId) {
 // get img tag nodes
 let imageArray = document.getElementsByTagName('img');
 
+// checks if broswer is opened from mobile
+const isMobile = checkForMobile()
+console.log('Am I on mobile?: ', isMobile)
 
-// Establish connection
-const socket = io.connect();
+// Establish connection if not mobile
+// if mobile load from server and don't create a socket connection
+isMobile ? loadAssetsFromServer() : socket = io.connect()
+
 // server is empty or assets downloaded so create initiator
 socket.on('create_base_initiator', (assetTypes, foldLoading) => {
   // save peer configuration object to front end for host
@@ -59,13 +67,14 @@ socket.on('create_receiver_peer', (initiatorData, assetTypes, foldLoading) => {
   })
   peerMethods(p)
   p.signal(initiatorData.offer)
-  loopImg();
   // peerId is the socket id of the avaliable initiator that this peer will pair with
   peerId = initiatorData.peerId
   // location data of peer to render on page for demo
-  const location = initiatorData.location
-  document.getElementById('peer_info').innerHTML +=
-  `<br>*    Received data from ${location.city}, ${location.regionCode}, ${location.country} ${location.zipCode};`;
+  if (initiatorData.location) {
+    const location = initiatorData.location
+    document.getElementById('peer_info').innerHTML +=
+    `<br>* Received data from ${location.city}, ${location.regionCode}, ${location.country} ${location.zipCode};`;
+  }
 })
 
 // answer object has arrived to the initiator. Connection will when the signal(message) is invoked.
@@ -75,8 +84,10 @@ socket.on('answer_to_initiator', (message, peerLocation) => {
   p.signal(message)
 
   // location data of peer to render on page for demo
-  document.getElementById('peer_info').innerHTML +=
-  `<br>*    Sent data to ${peerLocation.city}, ${peerLocation.regionCode}, ${peerLocation.country} ${peerLocation.zipCode};`;
+  if (peerLocation) {
+    document.getElementById('peer_info').innerHTML +=
+    `<br>* Sent data to ${peerLocation.city}, ${peerLocation.regionCode}, ${peerLocation.country} ${peerLocation.zipCode};`;
+  }
 })
 
 // handles all signals
@@ -139,7 +150,7 @@ function handleOnData(data) {
     return;
   }
 
-  loopImage();  
+  loopImage();
 
   if (dataString.slice(0, 12) == "FINISHED-YUY") {
     let imageIndex = data.slice(12);
@@ -161,7 +172,7 @@ function handleOnData(data) {
 }
 
 function loopImage() {
-  let returnFunc = function() {    
+  let returnFunc = function() {
     if (otherCounter >= 1) return;
     for (let i = 0; i < imageArray.length; i += 1) {
       const imageSource = imageArray[i].dataset.src;
@@ -169,7 +180,7 @@ function loopImage() {
       const foldLoading = configuration.foldLoading ? isElementInViewport(imageArray[i]) : false;
       if (!configuration.assetTypes.includes(extension)) {
         extCounter++;
-        setServerImage(imageSource);        
+        setServerImage(imageSource);
       }
       if (foldLoading) {
         setServerImage(imageSource);
@@ -181,7 +192,7 @@ function loopImage() {
 }
 
 function setImage (imageData, imageArray, index) {
-  console.log('Received all data for an image. Setting image.');  
+  console.log('Received all data for an image. Setting image.');
   counter++;
   if (!isElementInViewport(imageArray[index])) {
     if (imageData.slice(0, 9) === 'undefined') imageArray[index].src = imageData.slice(9);
@@ -287,6 +298,11 @@ function isElementInViewport(el) {
 function imageNotFound(imageSrc) {
   console.log('this is not working!');
   // document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
+}
+
+function checkForMobile() {
+  testExp = new RegExp('Android|webOS|iPhone|iPad|BlackBerry|Windows Phone|Opera Mini|IEMobile|Mobile', 'i');
+  return testExp.test(navigator.userAgent) ? true : false;
 }
 
 function setServerImage(imageSource) {

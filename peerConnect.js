@@ -58,7 +58,9 @@ function PeerConnect(config, server) {
       }
     })
     .catch(err => {
-      console.log(err)
+      console.log(err);
+      config.geolocate = false;
+      createBaseInitiator(socket, config);
     })
 
     // Initiator sent offer object to server. Store offer object to the client's respective object inside this.activeClients. Set this client to an initiator and update this.numInitiators count.

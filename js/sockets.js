@@ -32,6 +32,8 @@ let imageArray = document.getElementsByTagName('img');
 for (let key in imageArray) {
   if (!isNaN(key)) imageArray[key].setAttribute('id', key);
 }
+//image Id to append timestamp on each image
+let imageId = 0;
 
 
 // Establish connection
@@ -188,7 +190,12 @@ function handleOnData(data) {
   if (data.toString().slice(0, 12) == "FINISHED-YUY") {
     counter++;
     console.log("Received all data for an image. Setting image.");
-    reportTime(dataReceivedTime, currentTime, 'time_to_receive');
+
+    // reportTime(dataReceivedTime, currentTime, 'time_to_receive');
+    //append time it took to receive image data
+    document.getElementById(imageId).parentNode.appendChild(document.createTextNode(`${new Date() - currentTime} ms`));
+    currentTime = new Date();
+    imageId += 1;
     if (!isElementInViewport(imageArray[data.slice(12)])) {
 
       if (imageData.slice(0, 9) === 'undefined') imageArray[data.slice(12)].src = imageData.slice(9);
@@ -306,6 +313,6 @@ function imageNotFound(imageSrc) {
 // function that reports time to DOM
 function reportTime(time, currentOrTotal, domId) {
   time = new Date();
-  document.getElementById(domId).innerHTML += `${time - currentOrTotal} ms  `;
+  document.getElementById(domId).innerHTML += `<span class="bold">${time - currentOrTotal} ms</span>`;
   currentTime = new Date();
 }

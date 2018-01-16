@@ -6,14 +6,15 @@
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>PeerConnect</title>
   <style>
-  @import url('https://fonts.googleapis.com/css?family=Open+Sans|Raleway:300,400');
+  @import url('https://fonts.googleapis.com/css?family=Open+Sans:900|Raleway:300,400');
 
     body {
       background-color: #E5E2DE;
       font-family: 'Open Sans', sans-serif;
     }
 
-    h1 {
+    .title {
+      margin-bottom: 20px;
       font-size: 60px;
       font-weight: 300;
       font-family:'Raleway', sans-serif;
@@ -21,7 +22,12 @@
       color:#9F2738;
     }
 
+    .bold {
+      font-weight: 900;
+    }
+
     img {
+      margin-bottom: 10px;
       width: 300px;
       /*height: 300px;*/
       /*overflow: hidden;*/
@@ -37,13 +43,14 @@
       display: grid;
       grid-template-columns: 300px 300px 300px;
       grid-gap: 10px;
+      margin-top: 10px;
     }
   </style>
 </head>
 
 <body>
   <!-- <img id="title_frame" data-src"" src="https://png.pngtree.com/element_origin_min_pic/16/12/17/2e5c1508201c1133fc48c953885dfcda.jpg"/> -->
-  <h1>PeerConnect</h1>
+  <div class="title">PeerConnect</div>
   <main>
     <img class="loading_gif" data-src="" src="https://loading.io/spinners/pies/lg.pie-chart-loading-gif.gif" style="display:inline;"/>
     <div id="downloaded_from" style="display:none;">Assets downloaded from </div>
@@ -53,56 +60,55 @@
     <div id="time_total_from_server"></div>
     <div id="report" style="display:none;">
       <div id="time_to_connect">Time it took to establish connection: </div>
-      <div id="time_to_receive">Time it took to receive data: </div>
       <div id="time_to_destroy">Time it took to destroy connection: </div>
       </br>
       <div id="time_total">Total time: </div>
     </div>
     <section id="image-container">
-      <div>
+      <div class="bold">
         <img data-src="../assets/image1.jpg">
       </div>
-      <div>
+      <div class="bold">
         <img data-src="../assets/image2.png">
       </div>
-      <div>
+      <div class="bold">
         <img data-src="../assets/image3.jpg">
       </div>
 
-      <div>
+      <div class="bold">
         <img data-src="../assets/image4.jpg">
       </div>
-      <div>
+      <div class="bold">
         <img data-src="../assets/image5.jpeg">
       </div>
-      <div>
+      <div class="bold">
         <img data-src="../assets/image6.jpg">
       </div>
-      <div>
+      <div class="bold">
         <img data-src="../assets/image7.jpg">
       </div>
-      <div>
+      <div class="bold">
         <img data-src="../assets/image8.jpg">
       </div>
-      <div>
+      <div class="bold">
         <img data-src="../assets/image9.jpg">
       </div>
-      <div>
+      <div class="bold">
         <img data-src="../assets/image10.jpg">
       </div>
-      <div>
+      <div class="bold">
         <img data-src="../assets/image11.jpg">
       </div>
-      <div>
+      <div class="bold">
         <img data-src="../assets/image12.gif">
       </div>
-      <div>
+      <div class="bold">
         <img data-src="../assets/image13.png">
       </div>
-      <div>
+      <div class="bold">
         <img data-src="../assets/image14.jpg">
       </div>
-      <div>
+      <div class="bold">
         <img data-src="../assets/image15.jpg">
       </div>
     </section>

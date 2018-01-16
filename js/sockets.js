@@ -103,6 +103,10 @@ document.getElementById('peer_info').style.display = '';
   }
 })
 
+socket.on('speed_ping_client', () => {
+  socket.emit('speed_ping_answer')
+})
+
 // handles all signals
 function handleOnSignal(data) {
   // send offer object to server for server to store

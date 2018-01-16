@@ -32,7 +32,7 @@ const peerConfig = {
   // load images above the fold from server if foldLoading: true
   foldLoading: true,
   // toggle geolocation for pairing peers
-  geolocate: true
+  geolocate: false
 };
 
 PeerConnect(peerConfig, server);

@@ -18,6 +18,7 @@ function PeerConnect(config, server) {
     numClients: 0,
     numInitiators: 0
   };
+  this.pingTime;
 
   // server socket
   this.io.on("connection", socket => {
@@ -59,6 +60,7 @@ function PeerConnect(config, server) {
         }
       })
       .catch(err => {
+        // if API fetch fails, turn of geolocate and create new initiator
         console.log(err);
         config.geolocate = false;
         createBaseInitiator(socket, config)
@@ -72,11 +74,18 @@ function PeerConnect(config, server) {
     }
     // Initiator sent offer object to server. Store offer object to the client's respective object inside this.activeClients. Set this client to an initiator and update this.numInitiators count.
     socket.on('offer_to_server', message => {
+      pingTime = new Date()
+      socket.emit('speed_ping_client')
       this.serverStats.numInitiators+=1;
       this.activeClients[socket.id].initiator = true;
       this.activeClients[socket.id].offer = message.offer;
       console.log(`numClients, numInitiators: ${this.serverStats.numClients}, ${this.serverStats.numInitiators}`);
     });
+
+    socket.on('speed_ping_answer', () => {
+      const currTime = new Date()
+      console.log(currTime - pingTime)
+    })
     // Receiver sent answer object to server. Send this answer object to the specific initiator that provided the offer object to the receiver.
     socket.on('answer_to_server', message => {
       socket.to(message.peerId).emit('answer_to_initiator', message.answer, this.activeClients[socket.id].location);
@@ -117,7 +126,7 @@ function createReceiverPeer(socket, activeClients, config, serverStats) {
       if (activeClients[id].initiator) {
         tempLocation = activeClients[id].location;
         tempDistance = distance(clientLocation.lat, clientLocation.lgn, tempLocation.lat, tempLocation.lgn);
-        if (tempDistance < closestPeer.distance) {
+        if (tempDistance <= closestPeer.distance) {
           closestPeer.id = id;
           closestPeer.distance = tempDistance;
         };

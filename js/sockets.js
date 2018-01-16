@@ -41,12 +41,12 @@ for (let key in imageArray) {
 }
 
 // checks if broswer is opened from mobile
-const isMobile = checkForMobile()
-console.log('Am I on mobile?: ', isMobile)
+const isMobile = checkForMobile();
+console.log('Am I on mobile?: ', isMobile);
 
 // Establish connection if not mobile
 // if mobile load from server and don't create a socket connection
-isMobile ? loadAssetsFromServer() : socket = io.connect()
+isMobile ? loadAssetsFromServer() : socket = io.connect();
 
 // server is empty or assets downloaded so create initiator
 socket.on('create_base_initiator', (assetTypes, foldLoading) => {
@@ -58,12 +58,12 @@ socket.on('create_base_initiator', (assetTypes, foldLoading) => {
   document.getElementById('downloaded_from').style.display = '';
   // download assets from server, create initiator peer
   // tell server assets were downloaded and send answer object to server (this happens when new peer is created with initiator key true)
-  createInitiator(true)
+  createInitiator(true);
 
 })
 // Create receiver peer; server determined that this peer can be a receiver and sent a stored offer object from an avaliable initiator
 socket.on('create_receiver_peer', (initiatorData, assetTypes, foldLoading) => {
-  console.log('creating receiver peer')
+  console.log('creating receiver peer');
   // save peer configuration object to front end for peer
   configuration.assetTypes = assetTypes;
   configuration.foldLoading = foldLoading;
@@ -72,10 +72,10 @@ socket.on('create_receiver_peer', (initiatorData, assetTypes, foldLoading) => {
     trickle: false,
     reconnectTimer: 100
   })
-  peerMethods(p)
-  p.signal(initiatorData.offer)
+  peerMethods(p);
+  p.signal(initiatorData.offer);
   // peerId is the socket id of the avaliable initiator that this peer will pair with
-  peerId = initiatorData.peerId
+  peerId = initiatorData.peerId;
   // location data of peer to render on page for demo
 
   document.getElementsByClassName('loading_gif')[0].style.display = 'none';
@@ -93,9 +93,9 @@ socket.on('create_receiver_peer', (initiatorData, assetTypes, foldLoading) => {
 
 // answer object has arrived to the initiator. Connection will when the signal(message) is invoked.
 socket.on('answer_to_initiator', (message, peerLocation) => {
-  console.log('answer_to_initiator')
+  console.log('answer_to_initiator');
   // this final signal where initiator receives the answer does not call handleOnSignal/.on('signal'), it goes handleOnConnect.
-  p.signal(message)
+  p.signal(message);
 
   // location data of peer to render on page for demo
 document.getElementById('peer_info').style.display = '';
@@ -109,33 +109,33 @@ document.getElementById('peer_info').style.display = '';
 function handleOnSignal(data) {
   // send offer object to server for server to store
   if (data.type === 'offer') {
-    console.log('Emitting offer_to_server.')
-    socket.emit('offer_to_server', { offer: data })
+    console.log('Emitting offer_to_server.');
+    socket.emit('offer_to_server', { offer: data });
   }
   // send answer object to server for server to send to avaliable initiator
   if (data.type === 'answer') {
-    console.log('Emitting answer_to_server.')
-    socket.emit('answer_to_server', { answer: data, peerId: peerId })
+    console.log('Emitting answer_to_server.');
+    socket.emit('answer_to_server', { answer: data, peerId: peerId });
   }
   // After the offer/answer object is generated, ice candidates are generated as well. These are stored to be sent after the P2P connection is established.
   if (data.candidate) {
-    candidates.push(data)
+    candidates.push(data);
   }
 }
 
 // handles when peers are connected through P2P
 function handleOnConnect() {
-  console.log('CONNECTED')
+  console.log('CONNECTED');
   reportTime(peersConnectedTime, currentTime, 'time_to_connect');
   // send ice candidates if exist
   if (candidates.length) {
-    console.log(`Sending ${candidates.length} ice candidates.`)
-    p.send(JSON.stringify(candidates))
-    candidates = []
+    console.log(`Sending ${candidates.length} ice candidates.`);
+    p.send(JSON.stringify(candidates));
+    candidates = [];
   }
   // send assets if initiator (uncomment this if trickle off for receiver)
   if (assetsDownloaded) {
-    sendAssetsToPeer(p)
+    sendAssetsToPeer(p);
   }
 }
 
@@ -148,10 +148,10 @@ function handleOnData(data) {
   if (dataString.slice(0, 1) === '[') {
     const receivedCandidates = JSON.parse(data)
     receivedCandidates.forEach(ele => {
-      console.log('got candidate')
-      p.signal(ele)
+      console.log('got candidate');
+      p.signal(ele);
     });
-    console.log('Received all ice candidates.')
+    console.log('Received all ice candidates.');
     // // send assets if initiator
     // // uncomment this if receiver trickle on
     // if (assetsDownloaded) {
@@ -169,8 +169,7 @@ function handleOnData(data) {
 
   if (dataString.slice(0, 12) == "FINISHED-YUY") {
     let imageIndex = data.slice(12);
-    console.log('imageArray is: ', imageArray[imageIndex])
-    // reportTime(dataReceivedTime, currentTime, 'time_to_receive');
+    console.log('imageArray is: ', imageArray[imageIndex]);
     //append time it took to receive image data
     document.getElementById(imageIndex).parentNode.appendChild(document.createTextNode(`${new Date() - currentTime} ms`));
     currentTime = new Date();
@@ -242,7 +241,7 @@ function createInitiator(base) {
     trickle: false,
     reconnectTimer: 100
   });
-  peerMethods(p)
+  peerMethods(p);
 }
 
 // data chunking/parsing
@@ -278,10 +277,10 @@ function sendImage(image, peer, imageIndex) {
   for (let f = 0; f < n; f++) {
     let start = f * CHUNK_SIZE;
     let end = (f + 1) * CHUNK_SIZE;
-    peer.send(data.slice(start, end))
+    peer.send(data.slice(start, end));
   }
   if (data.length % CHUNK_SIZE) {
-    peer.send(data.slice(n * CHUNK_SIZE))
+    peer.send(data.slice(n * CHUNK_SIZE));
   }
   peer.send(`FINISHED-YUY${imageIndex}`);
 }
@@ -314,7 +313,7 @@ function getImgData(image) {
 
 function isElementInViewport(el) {
   const rect = el.getBoundingClientRect();
-  console.log(rect)
+  console.log(rect);
   return (
     rect.top >= 0 &&
     rect.left >= 0 &&

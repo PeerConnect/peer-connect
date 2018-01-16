@@ -82,7 +82,7 @@ function PeerConnect(config, server) {
       console.log(`numClients, numInitiators: ${this.serverStats.numClients}, ${this.serverStats.numInitiators}`);
     });
 
-    socket.on('speed_ping_answer', pingTime => {
+    socket.on('speed_ping_answer', () => {
       const currTime = new Date()
       console.log(currTime, pingTime)
       console.log(currTime - pingTime)

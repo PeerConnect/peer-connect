@@ -155,7 +155,6 @@ function handleOnData(data) {
   if (dataString.slice(0, 12) == "FINISHED-YUY") {
     let imageIndex = data.slice(12);
     reportTime(dataReceivedTime, currentTime, 'time_to_receive');
-    if (imageIndex === 5) console.log(imageData);
     setImage(imageData, imageArray, imageIndex);
     imageData = '';
     if (counter + extCounter === imageArray.length) {
@@ -165,6 +164,7 @@ function handleOnData(data) {
       reportTime(connectionDestroyedTime, currentTime, 'time_to_destroy');
       reportTime(connectionDestroyedTime, browserOpenTime, 'time_total');
       p.destroy();
+      checkForImageError(imageArray);
       document.getElementById('downloaded_from').innerHTML = 'Assets got from PEER!!';
     }
   } else {
@@ -297,14 +297,18 @@ function isElementInViewport(el) {
   );
 }
 
-function imageNotFound(imageSrc) {
-  console.log('this is not working!');
-  // document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
-}
-
 function checkForMobile() {
   testExp = new RegExp('Android|webOS|iPhone|iPad|BlackBerry|Windows Phone|Opera Mini|IEMobile|Mobile', 'i');
   return testExp.test(navigator.userAgent) ? true : false;
+}
+
+function checkForImageError(imageArray) {
+  for (let i = 0; i < imageArray.length; i++) {
+    let source = imageArray[i].dataset.src;
+    imageArray[i].error = function() {
+      setServerImage(source);
+    }
+  }
 }
 
 function setServerImage(imageSource) {

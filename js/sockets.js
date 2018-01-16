@@ -30,14 +30,14 @@ let dataReceivedTime;
 let connectionDestroyedTime;
 
 // get img tag nodes
-let imageArray = document.getElementsByTagName('img');
+let imageArray = Object.values(document.getElementsByTagName('img'));
+// let imageArray = document.getElementsByTagName('img');
+imageArray = imageArray.slice(1);
 
 //assign ids to image
 for (let key in imageArray) {
   if (!isNaN(key)) imageArray[key].setAttribute('id', key);
 }
-//image Id to append timestamp on each image
-let imageId = 0;
 
 // checks if broswer is opened from mobile
 const isMobile = checkForMobile()
@@ -52,6 +52,7 @@ socket.on('create_base_initiator', (assetTypes, foldLoading) => {
   // save peer configuration object to front end for host
   configuration.assetTypes = assetTypes;
   configuration.foldLoading = foldLoading;
+  document.getElementsByClassName('loading_gif')[0].style.display = 'none';
   document.getElementById('downloaded_from').innerHTML = 'Assets downloaded from the SERVER!';
   document.getElementById('downloaded_from').style.display = '';
   // download assets from server, create initiator peer
@@ -167,11 +168,12 @@ function handleOnData(data) {
 
   if (dataString.slice(0, 12) == "FINISHED-YUY") {
     let imageIndex = data.slice(12);
+    console.log('imageIndex is: ', imageIndex)
+    console.log('imageArray is: ', imageArray)
     // reportTime(dataReceivedTime, currentTime, 'time_to_receive');
     //append time it took to receive image data
-    document.getElementById(imageId).parentNode.appendChild(document.createTextNode(`${new Date() - currentTime} ms`));
+    document.getElementById(imageIndex).parentNode.appendChild(document.createTextNode(`${new Date() - currentTime} ms`));
     currentTime = new Date();
-    imageId += 1;
     setImage(imageData, imageArray, imageIndex);
     imageData = '';
     if (counter + extCounter === imageArray.length) {
@@ -195,6 +197,8 @@ function loopImage() {
     for (let i = 0; i < imageArray.length; i += 1) {
       const imageSource = imageArray[i].dataset.src;
       const extension = getImageType(imageArray[i]);
+      console.log('imageArray[i]: ', imageArray[i])
+      console.log(`isElementInViewport is: from ${i}`)
       const foldLoading = configuration.foldLoading ? isElementInViewport(imageArray[i]) : false;
       if (!configuration.assetTypes.includes(extension)) {
         extCounter++;
@@ -287,7 +291,7 @@ function loadAssetsFromServer() {
   console.log("LOAD ASSETS FROM SERVER");
 
   // take off loading gif
-  document.getElementsByClassName('loading_gif')[0].style.display = 'none';
+  // document.getElementsByClassName('loading_gif')[0].style.display = 'none';
 
   for (let i = 0; i < imageArray.length; i += 1) {
     const imageSrc = imageArray[i].dataset.src;
@@ -310,6 +314,7 @@ function getImgData(image) {
 
 function isElementInViewport(el) {
   const rect = el.getBoundingClientRect();
+  console.log(rect)
   return (
     rect.top >= 0 &&
     rect.left >= 0 &&

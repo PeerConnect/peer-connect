@@ -29,13 +29,15 @@ let peersConnectedTime;
 let dataReceivedTime;
 let connectionDestroyedTime;
 
-function reportTime(time, currentOrTotal, domId) {
-  time = new Date();
-  document.getElementById(domId).innerHTML += `${time - currentOrTotal} ms  `;
-  currentTime = new Date();
-}
 // get img tag nodes
 let imageArray = document.getElementsByTagName('img');
+
+//assign ids to image
+for (let key in imageArray) {
+  if (!isNaN(key)) imageArray[key].setAttribute('id', key);
+}
+//image Id to append timestamp on each image
+let imageId = 0;
 
 // checks if broswer is opened from mobile
 const isMobile = checkForMobile()
@@ -50,9 +52,12 @@ socket.on('create_base_initiator', (assetTypes, foldLoading) => {
   // save peer configuration object to front end for host
   configuration.assetTypes = assetTypes;
   configuration.foldLoading = foldLoading;
+  document.getElementById('downloaded_from').innerHTML = 'Assets downloaded from the SERVER!';
+  document.getElementById('downloaded_from').style.display = '';
   // download assets from server, create initiator peer
   // tell server assets were downloaded and send answer object to server (this happens when new peer is created with initiator key true)
   createInitiator(true)
+
 })
 // Create receiver peer; server determined that this peer can be a receiver and sent a stored offer object from an avaliable initiator
 socket.on('create_receiver_peer', (initiatorData, assetTypes, foldLoading) => {
@@ -70,11 +75,18 @@ socket.on('create_receiver_peer', (initiatorData, assetTypes, foldLoading) => {
   // peerId is the socket id of the avaliable initiator that this peer will pair with
   peerId = initiatorData.peerId
   // location data of peer to render on page for demo
+
+  document.getElementsByClassName('loading_gif')[0].style.display = 'none';
+  document.getElementById('downloaded_from').innerHTML = 'Assets downloaded from a PEER!';
+  document.getElementById('downloaded_from').style.display = '';
+  document.getElementById('report').style.display = '';
+  document.getElementById('peer_info').style.display = '';
   if (initiatorData.location) {
     const location = initiatorData.location
     document.getElementById('peer_info').innerHTML +=
     `<br>* Received data from ${location.city}, ${location.regionCode}, ${location.country} ${location.zipCode};`;
   }
+
 })
 
 // answer object has arrived to the initiator. Connection will when the signal(message) is invoked.
@@ -84,6 +96,7 @@ socket.on('answer_to_initiator', (message, peerLocation) => {
   p.signal(message)
 
   // location data of peer to render on page for demo
+document.getElementById('peer_info').style.display = '';
   if (peerLocation) {
     document.getElementById('peer_info').innerHTML +=
     `<br>* Sent data to ${peerLocation.city}, ${peerLocation.regionCode}, ${peerLocation.country} ${peerLocation.zipCode};`;
@@ -154,7 +167,11 @@ function handleOnData(data) {
 
   if (dataString.slice(0, 12) == "FINISHED-YUY") {
     let imageIndex = data.slice(12);
-    reportTime(dataReceivedTime, currentTime, 'time_to_receive');
+    // reportTime(dataReceivedTime, currentTime, 'time_to_receive');
+    //append time it took to receive image data
+    document.getElementById(imageId).parentNode.appendChild(document.createTextNode(`${new Date() - currentTime} ms`));
+    currentTime = new Date();
+    imageId += 1;
     setImage(imageData, imageArray, imageIndex);
     imageData = '';
     if (counter + extCounter === imageArray.length) {
@@ -163,8 +180,9 @@ function handleOnData(data) {
       console.log('DESTROYING PEERS');
       reportTime(connectionDestroyedTime, currentTime, 'time_to_destroy');
       reportTime(connectionDestroyedTime, browserOpenTime, 'time_total');
+      currentTime = new Date();
       p.destroy();
-      document.getElementById('downloaded_from').innerHTML = 'Assets got from PEER!!';
+
     }
   } else {
     imageData += dataString;
@@ -213,7 +231,7 @@ function setImageHeights(dataString, imageArray) {
 function createInitiator(base) {
   if (base) {
     loadAssetsFromServer();
-    assetsDownloaded = true
+    assetsDownloaded = true;
   }
   p = new Peer({
     initiator: true,
@@ -267,12 +285,16 @@ function sendImage(image, peer, imageIndex) {
 // download assets from server
 function loadAssetsFromServer() {
   console.log("LOAD ASSETS FROM SERVER");
+
+  // take off loading gif
+  document.getElementsByClassName('loading_gif')[0].style.display = 'none';
+
   for (let i = 0; i < imageArray.length; i += 1) {
     const imageSrc = imageArray[i].dataset.src;
     setServerImage(imageSrc);
   }
-
-  document.getElementById('downloaded_from').innerHTML = ' Assets downloaded from: SERVER!!!';
+  // report time it took to load assets from server
+  document.getElementById('time_total_from_server').innerHTML = `Time it took to load from server: ${new Date() - browserOpenTime} ms  `;
 }
 
 function getImgData(image) {
@@ -282,6 +304,7 @@ function getImgData(image) {
   context.canvas.width = img.width;
   context.canvas.height = img.height;
   context.drawImage(img, 0, 0, img.width, img.height);
+
   return canvas.toDataURL();
 }
 
@@ -298,6 +321,14 @@ function isElementInViewport(el) {
 function imageNotFound(imageSrc) {
   console.log('this is not working!');
   // document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
+}
+
+
+// function that reports time to DOM
+function reportTime(time, currentOrTotal, domId) {
+  time = new Date();
+  document.getElementById(domId).innerHTML += `<span class="bold">${time - currentOrTotal} ms</span>`;
+  currentTime = new Date();
 }
 
 function checkForMobile() {

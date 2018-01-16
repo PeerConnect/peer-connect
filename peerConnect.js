@@ -60,15 +60,16 @@ function PeerConnect(config, server) {
       })
       .catch(err => {
         console.log(err);
+        config.geolocate = false;
+        createBaseInitiator(socket, config)
       })
     } else {
       if (this.serverStats.numInitiators < this.threshold) {
         createBaseInitiator(socket, config);
       } else {
         createReceiverPeer(socket, this.activeClients, config, this.serverStats);
-      };
-    };
-
+      }
+    }
     // Initiator sent offer object to server. Store offer object to the client's respective object inside this.activeClients. Set this client to an initiator and update this.numInitiators count.
     socket.on('offer_to_server', message => {
       this.serverStats.numInitiators+=1;

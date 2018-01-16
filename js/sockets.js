@@ -155,6 +155,7 @@ function handleOnData(data) {
   if (dataString.slice(0, 12) == "FINISHED-YUY") {
     let imageIndex = data.slice(12);
     reportTime(dataReceivedTime, currentTime, 'time_to_receive');
+    if (imageIndex === 5) console.log(imageData);
     setImage(imageData, imageArray, imageIndex);
     imageData = '';
     if (counter + extCounter === imageArray.length) {
@@ -197,8 +198,6 @@ function setImage (imageData, imageArray, index) {
   if (!isElementInViewport(imageArray[index])) {
     if (imageData.slice(0, 9) === 'undefined') imageArray[index].src = imageData.slice(9);
     else imageArray[index].src = imageData;
-    const newImage = imageArray[index].dataset.src;
-    imageArray[index].onerror = imageNotFound(newImage);
   }
 }
 
@@ -250,15 +249,17 @@ function getImageType(image) {
 }
 
 function sendImage(image, peer, imageIndex) {
-  let data = getImgData(image);
-  let CHUNK_SIZE = 64000;
+  let data = getImageData(image);
+  let CHUNK_SIZE = 60000;
   let n = data.length / CHUNK_SIZE;
   for (let f = 0; f < n; f++) {
     let start = f * CHUNK_SIZE;
     let end = (f + 1) * CHUNK_SIZE;
+    console.log(data.slice(start, end));
     peer.send(data.slice(start, end))
   }
   if (data.length % CHUNK_SIZE) {
+    console.log(data.slice(n * CHUNK_SIZE));
     peer.send(data.slice(n * CHUNK_SIZE))
   }
   peer.send(`FINISHED-YUY${imageIndex}`);
@@ -275,14 +276,15 @@ function loadAssetsFromServer() {
   document.getElementById('downloaded_from').innerHTML = ' Assets downloaded from: SERVER!!!';
 }
 
-function getImgData(image) {
+function getImageData(image) {
   let canvas = document.createElement('canvas');
   let context = canvas.getContext('2d');
   let img = image;
+  let type = getImageType(image);
   context.canvas.width = img.width;
   context.canvas.height = img.height;
   context.drawImage(img, 0, 0, img.width, img.height);
-  return canvas.toDataURL();
+  return canvas.toDataURL(`image/${type}`);
 }
 
 function isElementInViewport(el) {

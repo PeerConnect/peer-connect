@@ -31,8 +31,9 @@ let connectionDestroyedTime;
 
 // get img tag nodes
 let imageArray = Object.values(document.getElementsByTagName('img'));
+imageArray = imageArray.filter(node => node.hasAttribute('data-src'));
+console.log(imageArray.length);
 // let imageArray = document.getElementsByTagName('img');
-imageArray = imageArray.slice(1);
 
 //assign ids to image
 for (let key in imageArray) {
@@ -168,8 +169,7 @@ function handleOnData(data) {
 
   if (dataString.slice(0, 12) == "FINISHED-YUY") {
     let imageIndex = data.slice(12);
-    console.log('imageIndex is: ', imageIndex)
-    console.log('imageArray is: ', imageArray)
+    console.log('imageArray is: ', imageArray[imageIndex])
     // reportTime(dataReceivedTime, currentTime, 'time_to_receive');
     //append time it took to receive image data
     document.getElementById(imageIndex).parentNode.appendChild(document.createTextNode(`${new Date() - currentTime} ms`));
@@ -197,8 +197,8 @@ function loopImage() {
     for (let i = 0; i < imageArray.length; i += 1) {
       const imageSource = imageArray[i].dataset.src;
       const extension = getImageType(imageArray[i]);
-      console.log('imageArray[i]: ', imageArray[i])
-      console.log(`isElementInViewport is: from ${i}`)
+      // console.log('imageArray[i]: ', imageArray[i])
+      // console.log(`isElementInViewport is: from ${i}`)
       const foldLoading = configuration.foldLoading ? isElementInViewport(imageArray[i]) : false;
       if (!configuration.assetTypes.includes(extension)) {
         extCounter++;

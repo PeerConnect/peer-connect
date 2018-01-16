@@ -103,7 +103,7 @@ document.getElementById('peer_info').style.display = '';
   }
 })
 
-socket.on('speed_ping_client', () => {
+socket.on('speed_ping_client', pingTime => {
   socket.emit('speed_ping_answer')
 })
 

@@ -82,8 +82,9 @@ function PeerConnect(config, server) {
       console.log(`numClients, numInitiators: ${this.serverStats.numClients}, ${this.serverStats.numInitiators}`);
     });
 
-    socket.on('speed_ping_answer', () => {
+    socket.on('speed_ping_answer', pingTime => {
       const currTime = new Date()
+      console.log(currTime, pingTime)
       console.log(currTime - pingTime)
     })
     // Receiver sent answer object to server. Send this answer object to the specific initiator that provided the offer object to the receiver.

@@ -3,13 +3,18 @@
 const socket = require('socket.io');
 const fetch = require('node-fetch');
 
+
 function PeerConnect(config, server) {
   // DEFAULT CONFIGURABLES
-  this.config = config;
-  this.threshold = config.threshold || 1;
-  this.assetTypes = config.assetTypes || ['jpg', 'jpeg'];
-  this.foldLoading = config.foldLoading !== false; // default true
-  this.geolocate = config.geolocate; // defaults to undefined
+  this.config = { ...config }; // eslint rules: parameters should be immutable
+  this.config.threshold = this.config.threshold || 1;
+  this.config.foldloading = this.config.foldLoading !== false; // default true
+  this.config.geolocate = this.config.geolocate; // defaults to undefined
+  const assetTypes = ['jpeg', 'jpg', 'png', 'gif', 'svg']; // default assetTypes
+  // referenced object values
+  // filter out the excluded assetTypes after lowercasing config.excludeTypes
+  this.config.excludeTypes = this.config.excludeTypes.map(type => type.toLowerCase());
+  this.config.assetTypes = assetTypes.filter(type => !this.config.excludeTypes.includes(type));
 
   // NON-CONFIGURABLES
   // Sockets setup
@@ -34,7 +39,7 @@ function PeerConnect(config, server) {
     };
 
     // creation of peers handled here
-    if (this.geolocate) {
+    if (this.config.geolocate) {
       // cip is the client's ip address
       // if localhost use static ip
       this.staticIP = '45.59.229.42';
@@ -56,24 +61,24 @@ function PeerConnect(config, server) {
           this.activeClients[client.id].location = location;
           // create base initiator if no avaliable initiator
           // initiators avaliable, create receiver
-          if (this.serverStats.numInitiators < this.threshold) {
+          if (this.serverStats.numInitiators < this.config.threshold) {
             createBaseInitiator(client, this.config);
           } else {
-            createReceiver(client, this.activeClients, config, this.serverStats);
+            createReceiver(client, this.activeClients, this.config, this.serverStats);
           }
         })
         .catch((err) => {
         // if API fetch fails, turn of geolocate and create new initiator
           console.log(err);
-          createBaseInitiator(client, config);
+          createBaseInitiator(client, this.config);
         });
     } else {
       // if geolocate is off
-      if (this.serverStats.numInitiators < this.threshold) {
-        createBaseInitiator(client, config);
+      if (this.serverStats.numInitiators < this.config.threshold) {
+        createBaseInitiator(client, this.config);
       }
-      if (this.serverStats.numInitiators >= this.threshold) {
-        createReceiver(client, this.activeClients, config, this.serverStats);
+      if (this.serverStats.numInitiators >= this.config.threshold) {
+        createReceiver(client, this.activeClients, this.config, this.serverStats);
       }
     }
     // Initiator sent offer object to server.

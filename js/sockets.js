@@ -281,7 +281,7 @@ function sendImage(image, peer, imageIndex) {
   for (let f = 0; f < n; f++) {
     let start = f * CHUNK_SIZE;
     let end = (f + 1) * CHUNK_SIZE;
-    console.log(data.slice(start, end));
+    // console.log(data.slice(start, end));
     peer.send(data.slice(start, end))
   }
   if (data.length % CHUNK_SIZE) {

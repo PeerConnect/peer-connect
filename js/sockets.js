@@ -190,6 +190,8 @@ function handleOnData(data) {
       reportTime(connectionDestroyedTime, browserOpenTime, 'time_total');
       currentTime = new Date();
       p.destroy();
+      checkForImageError(imageArray);
+      document.getElementById('downloaded_from').innerHTML = 'Assets got from PEER!!';
     }
   } else {
     imageData += dataString;
@@ -222,8 +224,6 @@ function setImage(imageData, imageArray, index) {
   if (!isElementInViewport(imageArray[index])) {
     if (imageData.slice(0, 9) === 'undefined') imageArray[index].src = imageData.slice(9);
     else imageArray[index].src = imageData;
-    const newImage = imageArray[index].dataset.src;
-    imageArray[index].onerror = imageNotFound(newImage);
   }
 }
 
@@ -275,16 +275,18 @@ function getImageType(image) {
 }
 
 function sendImage(image, peer, imageIndex) {
-  const data = getImgData(image);
-  const CHUNK_SIZE = 64000;
-  const n = data.length / CHUNK_SIZE;
+  let data = getImageData(image);
+  let CHUNK_SIZE = 60000;
+  let n = data.length / CHUNK_SIZE;
   for (let f = 0; f < n; f++) {
-    const start = f * CHUNK_SIZE;
-    const end = (f + 1) * CHUNK_SIZE;
-    peer.send(data.slice(start, end));
+    let start = f * CHUNK_SIZE;
+    let end = (f + 1) * CHUNK_SIZE;
+    console.log(data.slice(start, end));
+    peer.send(data.slice(start, end))
   }
   if (data.length % CHUNK_SIZE) {
-    peer.send(data.slice(n * CHUNK_SIZE));
+    console.log(data.slice(n * CHUNK_SIZE));
+    peer.send(data.slice(n * CHUNK_SIZE))
   }
   peer.send(`FINISHED-YUY${imageIndex}`);
 }
@@ -304,15 +306,15 @@ function loadAssetsFromServer() {
   document.getElementById('time_total_from_server').innerHTML = `Time it took to load from server: ${new Date() - browserOpenTime} ms  `;
 }
 
-function getImgData(image) {
-  const canvas = document.createElement('canvas');
-  const context = canvas.getContext('2d');
-  const img = image;
+function getImageData(image) {
+  let canvas = document.createElement('canvas');
+  let context = canvas.getContext('2d');
+  let img = image;
+  let type = getImageType(image);
   context.canvas.width = img.width;
   context.canvas.height = img.height;
   context.drawImage(img, 0, 0, img.width, img.height);
-
-  return canvas.toDataURL();
+  return canvas.toDataURL(`image/${type}`);
 }
 
 function isElementInViewport(el) {
@@ -325,12 +327,6 @@ function isElementInViewport(el) {
   );
 }
 
-function imageNotFound(imageSrc) {
-  console.log('this is not working!');
-  // document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
-}
-
-
 // function that reports time to DOM
 function reportTime(time, currentOrTotal, domId) {
   time = new Date();
@@ -341,6 +337,15 @@ function reportTime(time, currentOrTotal, domId) {
 function checkForMobile() {
   testExp = new RegExp('Android|webOS|iPhone|iPad|BlackBerry|Windows Phone|Opera Mini|IEMobile|Mobile', 'i');
   return !!testExp.test(navigator.userAgent);
+}
+
+function checkForImageError(imageArray) {
+  for (let i = 0; i < imageArray.length; i++) {
+    let source = imageArray[i].dataset.src;
+    imageArray[i].error = function() {
+      setServerImage(source);
+    }
+  }
 }
 
 function setServerImage(imageSource) {

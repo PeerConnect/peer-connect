@@ -26,18 +26,15 @@ let otherCounter = 0;
 const browserOpenTime = new Date();
 let currentTime = new Date();
 let peersConnectedTime;
-let dataReceivedTime;
 let connectionDestroyedTime;
 
 // get img tag nodes
 let imageArray = Object.values(document.getElementsByTagName('img'));
 imageArray = imageArray.filter(node => node.hasAttribute('data-src'));
-console.log(imageArray.length);
-// let imageArray = document.getElementsByTagName('img');
 
 //assign ids to image
-for (let key in imageArray) {
-  if (!isNaN(key)) imageArray[key].setAttribute('id', key);
+for (let i = 0; i < imageArray.length; i += 1) {
+  imageArray[i].setAttribute('id', i);
 }
 
 // checks if broswer is opened from mobile
@@ -248,7 +245,7 @@ function createInitiator(base) {
 function sendAssetsToPeer(peer) {
   sendImageHeights(imageArray, peer);
   for (let i = 0; i < imageArray.length; i += 1) {
-    let imageType = getImageType(imageArray[i])
+    let imageType = getImageType(imageArray[i]);
     if (configuration.assetTypes.includes(imageType)) {
       sendImage(imageArray[i], peer, i);
     }
@@ -261,6 +258,7 @@ function sendImageHeights(imageArray, peer) {
   for (let f = 0; f < imageArray.length; f++) {
     imageHeights.push(imageArray[f].height);
   }
+  console.log('imageHeights is: ', imageHeights)
   peer.send(`test123 ${JSON.stringify(imageHeights)}`);
 }
 
@@ -326,7 +324,6 @@ function imageNotFound(imageSrc) {
   console.log('this is not working!');
   // document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
 }
-
 
 // function that reports time to DOM
 function reportTime(time, currentOrTotal, domId) {

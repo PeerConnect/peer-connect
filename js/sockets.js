@@ -33,9 +33,7 @@ let imageArray = Object.values(document.getElementsByTagName('img'));
 imageArray = imageArray.filter(node => node.hasAttribute('data-src'));
 
 //assign ids to image
-for (let i = 0; i < imageArray.length; i += 1) {
-  imageArray[i].setAttribute('id', i);
-}
+imageArray.forEach((image, index) => image.setAttribute('id', index));
 
 // checks if broswer is opened from mobile
 const isMobile = checkForMobile();
@@ -255,6 +253,7 @@ function sendAssetsToPeer(peer) {
 
 function sendImageHeights(imageArray, peer) {
   let imageHeights = [];
+  imageArray.forEach(image => console.log(image.style.height))
   for (let f = 0; f < imageArray.length; f++) {
     imageHeights.push(imageArray[f].height);
   }

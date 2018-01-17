@@ -10,7 +10,7 @@ let configuration = {};
 // candidates is an array of the ice candidates to send to the peer once P2P connection is established
 // socket placeholder is for when page is opened on mobile.
 // if no placeholder, browser logs reference error to socket.
-let socket = {on: () => {}}
+let socket = { on: () => { } }
 let p = null;
 let assetsDownloaded = false;
 let peerId = '';
@@ -84,7 +84,7 @@ socket.on('create_receiver_peer', (initiatorData, assetTypes, foldLoading) => {
   if (initiatorData.location) {
     const location = initiatorData.location
     document.getElementById('peer_info').innerHTML +=
-    `<br>* Received data from ${location.city}, ${location.regionCode}, ${location.country} ${location.zipCode};`;
+      `<br>* Received data from ${location.city}, ${location.regionCode}, ${location.country} ${location.zipCode};`;
   }
 
 })
@@ -96,12 +96,37 @@ socket.on('answer_to_initiator', (message, peerLocation) => {
   p.signal(message)
 
   // location data of peer to render on page for demo
-document.getElementById('peer_info').style.display = '';
+  document.getElementById('peer_info').style.display = '';
   if (peerLocation) {
     document.getElementById('peer_info').innerHTML +=
-    `<br>* Sent data to ${peerLocation.city}, ${peerLocation.regionCode}, ${peerLocation.country} ${peerLocation.zipCode};`;
+      `<br>* Sent data to ${peerLocation.city}, ${peerLocation.regionCode}, ${peerLocation.country} ${peerLocation.zipCode};`;
   }
 })
+
+const client = new WebTorrent();
+socket.on('magnet_uri', magnet_uri => {
+  console.log(`SOCKET EMIT magnet_uri ${magnet_uri}`);
+  const torrentId = magnet_uri;
+  client.add(torrentId, function (torrent) {
+    // Got torrent metadata!
+    console.log('Client is downloading:', torrent.infoHash);
+
+    // Torrents can contain many files. Let's use the .mp4 file
+    var file = torrent.files.find(function (file) {
+      return file.name.endsWith('.mp4');
+    });
+
+    // Display the file by adding it to the DOM.
+    file.appendTo('.video-div');
+  });
+});
+
+// socket.on('seed_file', file => {
+//   console.log(`#*#* seed_file: ${file}`);
+//   client.seed(file, function (torrent) {
+//     console.log('Client is seeding ' + torrent.magnetURI)
+//   })
+// });
 
 // handles all signals
 function handleOnSignal(data) {
@@ -158,7 +183,7 @@ function handleOnData(data) {
     return;
   }
 
-  if (dataString.slice(0,7) === 'test123') {
+  if (dataString.slice(0, 7) === 'test123') {
     setImageHeights(dataString, imageArray);
     return;
   }
@@ -191,7 +216,7 @@ function handleOnData(data) {
 }
 
 function loopImage() {
-  let returnFunc = function() {
+  let returnFunc = function () {
     if (otherCounter >= 1) return;
     for (let i = 0; i < imageArray.length; i += 1) {
       const imageSource = imageArray[i].dataset.src;
@@ -210,7 +235,7 @@ function loopImage() {
   return returnFunc();
 }
 
-function setImage (imageData, imageArray, index) {
+function setImage(imageData, imageArray, index) {
   console.log('Received all data for an image. Setting image.');
   counter++;
   if (!isElementInViewport(imageArray[index])) {
@@ -261,9 +286,9 @@ function sendImageHeights(imageArray, peer) {
 }
 
 function getImageType(image) {
-    const imageSrc = image.dataset.src;
-    const regex = /(?:\.([^.]+))?$/;
-    return regex.exec(imageSrc)[1];
+  const imageSrc = image.dataset.src;
+  const regex = /(?:\.([^.]+))?$/;
+  return regex.exec(imageSrc)[1];
 }
 
 function sendImage(image, peer, imageIndex) {
@@ -334,7 +359,7 @@ function checkForMobile() {
 function checkForImageError(imageArray) {
   for (let i = 0; i < imageArray.length; i++) {
     let source = imageArray[i].dataset.src;
-    imageArray[i].error = function() {
+    imageArray[i].error = function () {
       setServerImage(source);
     }
   }

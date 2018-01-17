@@ -1,5 +1,6 @@
 const socket = require("socket.io");
 const fetch = require("node-fetch");
+const videoConnect = require('./videoConnect.js');
 
 function PeerConnect(config, server) {
   // DEFAULT CONFIGURABLES
@@ -22,7 +23,7 @@ function PeerConnect(config, server) {
   // server socket
   this.io.on("connection", socket => {
     console.log(`socket connection started. ID: ${socket.id}`);
-    this.serverStats.numClients+=1;
+    this.serverStats.numClients += 1;
     this.activeClients[socket.id] = {
       initiator: false,
       offer: null,
@@ -39,40 +40,39 @@ function PeerConnect(config, server) {
       // fetch request to IP API to determine location (longitude, latitude)
       // save location to activeClients
       fetch(`http://freegeoip.net/json/${cip}`)
-      .then(res => res.json())
-      .then(json => {
-        const location = {
-          lgn: json.longitude,
-          lat: json.latitude,
-          city: json.city,
-          zipCode: json.zip_code,
-          regionCode: json.region_code,
-          country: json.country_code
-        };
-        this.activeClients[socket.id].location = location;
-        // create base initiator if no avaliable initiator
-        // initiators avaliable, create receiver
-        if (this.serverStats.numInitiators < this.threshold) {
-          createBaseInitiator(socket, config);
-        } else {
-          createReceiverPeer(socket, this.activeClients, config, this.serverStats);
-        }
-      })
-      .catch(err => {
-        console.log(err);
-        config.geolocate = false;
-        createBaseInitiator(socket, config)
-      })
+        .then(res => res.json())
+        .then(json => {
+          const location = {
+            lgn: json.longitude,
+            lat: json.latitude,
+            city: json.city,
+            zipCode: json.zip_code,
+            regionCode: json.region_code,
+            country: json.country_code
+          };
+          this.activeClients[socket.id].location = location;
+          // create base initiator if no avaliable initiator
+          // initiators avaliable, create receiver
+          if (this.serverStats.numInitiators < this.threshold) {
+            createBaseInitiator(socket, config);
+          } else {
+            createReceiverPeer(socket, this.activeClients, config, this.serverStats);
+          }
+        })
+        .catch(err => {
+          console.log(err);
+        })
     } else {
       if (this.serverStats.numInitiators < this.threshold) {
         createBaseInitiator(socket, config);
       } else {
         createReceiverPeer(socket, this.activeClients, config, this.serverStats);
-      }
-    }
+      };
+    };
+
     // Initiator sent offer object to server. Store offer object to the client's respective object inside this.activeClients. Set this client to an initiator and update this.numInitiators count.
     socket.on('offer_to_server', message => {
-      this.serverStats.numInitiators+=1;
+      this.serverStats.numInitiators += 1;
       this.activeClients[socket.id].initiator = true;
       this.activeClients[socket.id].offer = message.offer;
       console.log(`numClients, numInitiators: ${this.serverStats.numClients}, ${this.serverStats.numInitiators}`);
@@ -85,14 +85,16 @@ function PeerConnect(config, server) {
     socket.on("disconnect", () => {
       console.log(`disconnecting ${socket.id}`);
       if (this.activeClients[socket.id].initiator) {
-        this.serverStats.numInitiators-=1;
+        this.serverStats.numInitiators -= 1;
       };
       delete this.activeClients[socket.id];
-      this.serverStats.numClients-=1;
+      this.serverStats.numClients -= 1;
       console.log(`numClients, numInitiators: ${this.serverStats.numClients}, ${this.serverStats.numInitiators}`);
     });
     socket.on('error', err => console.log(err));
+    videoConnect(socket);
   });
+
 };
 
 // create initiators after ip geolocation api call
@@ -131,7 +133,7 @@ function createReceiverPeer(socket, activeClients, config, serverStats) {
     };
     this.activeClients[closestPeer.id].initiator = false;
     // Updates this.numInitiators and emit to receiver and send initiator data
-    serverStats.numInitiators-=1;
+    serverStats.numInitiators -= 1;
     socket.emit('create_receiver_peer', initiatorData, config.assetTypes, config.foldLoading);
   } else {
     // loops through activeClients and randomly finds avaliable initiator
@@ -139,14 +141,14 @@ function createReceiverPeer(socket, activeClients, config, serverStats) {
     for (let id in activeClients) {
       if (activeClients[id].initiator) intiatorsArr.push(id);
     }
-    const selectedInitiatorId = intiatorsArr[Math.floor(Math.random()*intiatorsArr.length)];
+    const selectedInitiatorId = intiatorsArr[Math.floor(Math.random() * intiatorsArr.length)];
     const initiatorData = {
       offer: activeClients[selectedInitiatorId].offer,
       peerId: selectedInitiatorId
     };
     activeClients[selectedInitiatorId].initiator = false;
     // Updates this.numInitiators and emit to receiver and send initiator data
-    serverStats.numInitiators-=1;
+    serverStats.numInitiators -= 1;
     socket.emit('create_receiver_peer', initiatorData, config.assetTypes, config.foldLoading);
   };
 };
@@ -154,15 +156,15 @@ function createReceiverPeer(socket, activeClients, config, serverStats) {
 // function to calculate distance using two sets of coordindates
 // source: https://www.geodatasource.com/developers/javascript
 function distance(lat1, lon1, lat2, lon2) {
-	const radlat1 = Math.PI * lat1/180;
-	const radlat2 = Math.PI * lat2/180;
-	const theta = lon1-lon2;
-	const radtheta = Math.PI * theta/180;
-	let dist = Math.sin(radlat1) * Math.sin(radlat2) + Math.cos(radlat1) * Math.cos(radlat2) * Math.cos(radtheta);
-	dist = Math.acos(dist);
-	dist = dist * 180/Math.PI;
-	dist = dist * 60 * 1.1515;
-	return dist;
+  const radlat1 = Math.PI * lat1 / 180;
+  const radlat2 = Math.PI * lat2 / 180;
+  const theta = lon1 - lon2;
+  const radtheta = Math.PI * theta / 180;
+  let dist = Math.sin(radlat1) * Math.sin(radlat2) + Math.cos(radlat1) * Math.cos(radlat2) * Math.cos(radtheta);
+  dist = Math.acos(dist);
+  dist = dist * 180 / Math.PI;
+  dist = dist * 60 * 1.1515;
+  return dist;
 };
 
 module.exports = PeerConnect;

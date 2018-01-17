@@ -1,7 +1,7 @@
+const socket = require("socket.io");
+const fetch = require("node-fetch");
+const videoConnect = require('./videoConnect.js');
 /* eslint no-use-before-define: ["error", { "functions": false }] */
-
-const socket = require('socket.io');
-const fetch = require('node-fetch');
 
 function PeerConnect(config, server) {
   // DEFAULT CONFIGURABLES
@@ -63,7 +63,7 @@ function PeerConnect(config, server) {
           }
         })
         .catch((err) => {
-        // if API fetch fails, turn of geolocate and create new initiator
+          // if API fetch fails, turn of geolocate and create new initiator
           console.log(err);
           createBaseInitiator(client, config);
         });

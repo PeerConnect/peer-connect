@@ -164,7 +164,7 @@ function handleOnData(data) {
 
   if (dataString.slice(0, 12) == "FINISHED-YUY") {
     let imageIndex = data.slice(12);
-    console.log('imageArray is: ', imageArray[imageIndex]);
+    // console.log('imageArray is: ', imageArray[imageIndex]);
     //append time it took to receive image data
     document.getElementById(imageIndex).parentNode.appendChild(document.createTextNode(`${new Date() - currentTime} ms`));
     currentTime = new Date();
@@ -192,7 +192,7 @@ function loopImage() {
       const imageSource = imageArray[i].dataset.src;
       const extension = getImageType(imageArray[i]);
       // console.log('imageArray[i]: ', imageArray[i])
-      // console.log(`isElementInViewport is: from ${i}`)
+      console.log(`${isElementInViewport(imageArray[i])} is: from ${i}`)
       const foldLoading = configuration.foldLoading ? isElementInViewport(imageArray[i]) : false;
       if (!configuration.assetTypes.includes(extension)) {
         extCounter++;
@@ -214,7 +214,7 @@ function setImage (imageData, imageArray, index) {
     if (imageData.slice(0, 9) === 'undefined') imageArray[index].src = imageData.slice(9);
     else imageArray[index].src = imageData;
     const newImage = imageArray[index].dataset.src;
-    imageArray[index].onerror = imageNotFound(newImage);
+    imageArray[index].onerror = (() => setServerImage(newImage));
   }
 }
 
@@ -253,7 +253,7 @@ function sendAssetsToPeer(peer) {
 
 function sendImageHeights(imageArray, peer) {
   let imageHeights = [];
-  imageArray.forEach(image => console.log(image.style.height))
+  // imageArray.forEach(image => console.log(image.style.height))
   for (let f = 0; f < imageArray.length; f++) {
     imageHeights.push(imageArray[f].height);
   }
@@ -310,18 +310,12 @@ function getImgData(image) {
 
 function isElementInViewport(el) {
   const rect = el.getBoundingClientRect();
-  console.log(rect);
   return (
     rect.top >= 0 &&
     rect.left >= 0 &&
     rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
     rect.right <= (window.innerWidth || document.documentElement.clientWidth)
   );
-}
-
-function imageNotFound(imageSrc) {
-  console.log('this is not working!');
-  // document.querySelector(`[data-src='${imageSrc}']`).setAttribute('src', `${imageSrc}`);
 }
 
 // function that reports time to DOM

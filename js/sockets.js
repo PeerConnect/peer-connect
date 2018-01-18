@@ -32,14 +32,11 @@ let peersConnectedTime;
 let connectionDestroyedTime;
 
 // get img tag nodes
-const imageArray = document.getElementsByTagName('img');
+let imageArray = Object.values(document.getElementsByTagName('img'));
+imageArray = imageArray.filter(node => node.hasAttribute('data-src'));
 
-// assign ids to image
-for (const key in imageArray) {
-  if (!isNaN(key)) imageArray[key].setAttribute('id', key);
-}
-// image Id to append timestamp on each image
-let imageId = 0;
+//assign ids to image
+imageArray.forEach((image, index) => image.setAttribute('id', index));
 
 // checks if broswer is opened from mobile
 const isMobile = checkForMobile();
@@ -58,6 +55,7 @@ socket.on('create_base_initiator', (assetTypes, foldLoading) => {
   // save peer configuration object to front end for host
   configuration.assetTypes = assetTypes;
   configuration.foldLoading = foldLoading;
+  document.getElementsByClassName('loading_gif')[0].style.display = 'none';
   document.getElementById('downloaded_from').innerHTML = 'Assets downloaded from the SERVER!';
   document.getElementById('downloaded_from').style.display = '';
   // download assets from server, create initiator peer
@@ -173,13 +171,12 @@ function handleOnData(data) {
 
   loopImage();
 
-  if (dataString.slice(0, 12) == 'FINISHED-YUY') {
-    const imageIndex = data.slice(12);
-    // reportTime(dataReceivedTime, currentTime, 'time_to_receive');
-    // append time it took to receive image data
-    document.getElementById(imageId).parentNode.appendChild(document.createTextNode(`${new Date() - currentTime} ms`));
+  if (dataString.slice(0, 12) == "FINISHED-YUY") {
+    let imageIndex = data.slice(12);
+    // console.log('imageArray is: ', imageArray[imageIndex]);
+    //append time it took to receive image data
+    document.getElementById(imageIndex).parentNode.appendChild(document.createTextNode(`${new Date() - currentTime} ms`));
     currentTime = new Date();
-    imageId += 1;
     setImage(imageData, imageArray, imageIndex);
     imageData = '';
     if (counter + extCounter === imageArray.length) {
@@ -204,6 +201,8 @@ function loopImage() {
     for (let i = 0; i < imageArray.length; i += 1) {
       const imageSource = imageArray[i].dataset.src;
       const extension = getImageType(imageArray[i]);
+      // console.log('imageArray[i]: ', imageArray[i])
+      console.log(`${isElementInViewport(imageArray[i])} is: from ${i}`)
       const foldLoading = configuration.foldLoading ? isElementInViewport(imageArray[i]) : false;
       if (!configuration.assetTypes.includes(extension)) {
         extCounter += 1;
@@ -273,6 +272,7 @@ function sendImageHeights(imageArray, peer) {
   for (let f = 0; f < imageArray.length; f++) {
     imageHeights.push(imageArray[f].height);
   }
+  console.log('imageHeights is: ', imageHeights)
   peer.send(`test123 ${JSON.stringify(imageHeights)}`);
 }
 
@@ -304,7 +304,7 @@ function loadAssetsFromServer() {
   console.log('LOAD ASSETS FROM SERVER');
 
   // take off loading gif
-  document.getElementsByClassName('loading_gif')[0].style.display = 'none';
+  // document.getElementsByClassName('loading_gif')[0].style.display = 'none';
 
   for (let i = 0; i < imageArray.length; i += 1) {
     const imageSrc = imageArray[i].dataset.src;

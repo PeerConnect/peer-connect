@@ -30,9 +30,9 @@ const peerConfig = {
   // media types to share with peers
   mediaTypes: ['image', 'video', 'audio'],
   // asset file formats to exclude from peers
-  excludeFormats: ['svg'],
+  excludeFormats: ['gif'],
   // load images above the fold from server if foldLoading: true
-  foldLoading: false,
+  foldLoading: true,
   // toggle geolocation for pairing peers
   geolocate: true,
 };

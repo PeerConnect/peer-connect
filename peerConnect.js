@@ -3,9 +3,9 @@
 const socket = require('socket.io');
 const fetch = require('node-fetch');
 
-// base filetypes
+// all filetypes
 const fileTypes = {
-  image: ['jpeg', 'jpg', 'png', 'gif', 'svg'],
+  image: ['jpeg', 'jpg', 'png', 'gif'],
   video: ['mp4', 'avi', 'flv', 'wmv', 'mov'],
   audio: ['mp3', 'wma', 'wav'],
 };
@@ -18,6 +18,7 @@ function PeerConnect(config, server) {
   this.config.geolocate = this.config.geolocate; // defaults to undefined
 
   // REFERENCED CONFIGURABLES
+  // include the inputted media types
   // filter out the excluded assetTypes after lowercasing excludeFormats
   this.config.excludeFormats = lowerCaseConfig(this.config.excludeFormats);
   this.config.mediaTypes = lowerCaseConfig(this.config.mediaTypes);

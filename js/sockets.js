@@ -31,6 +31,7 @@ let connectionDestroyedTime;
 // get img tag nodes
 let imageArray = Object.values(document.getElementsByTagName('img'));
 imageArray = imageArray.filter(node => node.hasAttribute('data-src'));
+let imageArrayClone;
 
 //assign ids to image
 imageArray.forEach((image, index) => image.setAttribute('id', index));
@@ -156,7 +157,11 @@ function handleOnData(data) {
   }
 
   if (dataString.slice(0,7) === 'test123') {
-    setImageHeights(dataString, imageArray);
+    console.log('hit test!')
+    for (let i = 0; i < imageArray.length; i += 1) {
+      console.log('imageArray is: ', imageArray[i])
+    }
+    imageArrayClone = setImageHeights(dataString, imageArray);
     return;
   }
 
@@ -164,7 +169,7 @@ function handleOnData(data) {
 
   if (dataString.slice(0, 12) == "FINISHED-YUY") {
     let imageIndex = data.slice(12);
-    console.log('imageArray is: ', imageArray[imageIndex]);
+    // console.log('imageArray is: ', imageArray[imageIndex]);
     //append time it took to receive image data
     document.getElementById(imageIndex).parentNode.appendChild(document.createTextNode(`${new Date() - currentTime} ms`));
     currentTime = new Date();
@@ -192,8 +197,9 @@ function loopImage() {
       const imageSource = imageArray[i].dataset.src;
       const extension = getImageType(imageArray[i]);
       // console.log('imageArray[i]: ', imageArray[i])
-      // console.log(`isElementInViewport is: from ${i}`)
-      const foldLoading = configuration.foldLoading ? isElementInViewport(imageArray[i]) : false;
+      //pass in image nodes of sent data
+      console.log(`${isElementInViewport(imageArrayClone[i])} is: from ${i}`)
+      const foldLoading = configuration.foldLoading ? isElementInViewport(imageArrayClone[i]) : false;
       if (!configuration.assetTypes.includes(extension)) {
         extCounter++;
         setServerImage(imageSource);
@@ -218,11 +224,22 @@ function setImage (imageData, imageArray, index) {
   }
 }
 
+
+// preset images with sent heights
 function setImageHeights(dataString, imageArray) {
+  console.log('setting image heights to elementinviewport!');
+  let imageArrayCopy = [];
   imageHeight = JSON.parse(dataString.slice(7));
-  imageHeight.forEach((element, idx) => {
-    imageArray[idx].style.height = element + 'px';
-  });
+  imageHeight.forEach((height, index) => {
+    imageArrayCopy.push(imageArray[index].cloneNode(true))
+    imageArrayCopy[index].style.height = height + 'px';
+    console.log(imageArrayCopy[index])
+    console.log(imageArray[index])
+  })
+  return imageArrayCopy;
+  // imageHeight.forEach((element, idx) => {
+  //   imageArray[idx].style.height = element + 'px';
+  // });
 }
 
 // Creates an initiator (therefore emitting a signal that creates an offer). The base parameter determines if initiator should download assets from server (example: there are no other initiators connected or client's peer got disconnected).
@@ -241,11 +258,15 @@ function createInitiator(base) {
 
 // data chunking/parsing
 function sendAssetsToPeer(peer) {
+
+
+  //send heights of images to peer
   sendImageHeights(imageArray, peer);
+
   for (let i = 0; i < imageArray.length; i += 1) {
     let imageType = getImageType(imageArray[i]);
     if (configuration.assetTypes.includes(imageType)) {
-      sendImage(imageArray[i], peer, i);
+      // sendImage(imageArray[i], peer, i);
     }
     console.log('message sent');
   }
@@ -253,11 +274,12 @@ function sendAssetsToPeer(peer) {
 
 function sendImageHeights(imageArray, peer) {
   let imageHeights = [];
-  imageArray.forEach(image => console.log(image.style.height))
+  // imageArray.forEach(image => console.log(image.style.height))
   for (let f = 0; f < imageArray.length; f++) {
     imageHeights.push(imageArray[f].height);
   }
-  console.log('imageHeights is: ', imageHeights)
+  //send array of image heights to peer
+
   peer.send(`test123 ${JSON.stringify(imageHeights)}`);
 }
 
@@ -286,9 +308,6 @@ function sendImage(image, peer, imageIndex) {
 function loadAssetsFromServer() {
   console.log("LOAD ASSETS FROM SERVER");
 
-  // take off loading gif
-  // document.getElementsByClassName('loading_gif')[0].style.display = 'none';
-
   for (let i = 0; i < imageArray.length; i += 1) {
     const imageSrc = imageArray[i].dataset.src;
     setServerImage(imageSrc);
@@ -309,8 +328,13 @@ function getImgData(image) {
 }
 
 function isElementInViewport(el) {
+  console.log('el is: ', el)
   const rect = el.getBoundingClientRect();
-  console.log(rect);
+  console.log('rect is: ', rect);
+  // console.log('window.innerHeight is: ', window.innerHeight)
+  // console.log('window.innerWidth is: ', window.innerWidth)
+  // console.log('document.documentElement.clientHeight: ', document.documentElement.clientHeight)
+  // console.log('document.documentElement.clientWidth: ', document.documentElement.clientWidth)
   return (
     rect.top >= 0 &&
     rect.left >= 0 &&

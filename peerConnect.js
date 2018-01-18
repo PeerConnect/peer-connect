@@ -3,6 +3,12 @@
 const socket = require('socket.io');
 const fetch = require('node-fetch');
 
+// base filetypes
+const fileTypes = {
+  image: ['jpeg', 'jpg', 'png', 'gif', 'svg'],
+  video: ['mp4', 'avi', 'flv', 'wmv', 'mov'],
+  audio: ['mp3', 'wma', 'wav'],
+};
 
 function PeerConnect(config, server) {
   // DEFAULT CONFIGURABLES
@@ -10,11 +16,13 @@ function PeerConnect(config, server) {
   this.config.threshold = this.config.threshold || 1;
   this.config.foldloading = this.config.foldLoading !== false; // default true
   this.config.geolocate = this.config.geolocate; // defaults to undefined
-  const assetTypes = ['jpeg', 'jpg', 'png', 'gif', 'svg']; // default assetTypes
-  // referenced object values
-  // filter out the excluded assetTypes after lowercasing config.excludeTypes
-  this.config.excludeTypes = this.config.excludeTypes.map(type => type.toLowerCase());
-  this.config.assetTypes = assetTypes.filter(type => !this.config.excludeTypes.includes(type));
+
+  // REFERENCED CONFIGURABLES
+  // filter out the excluded assetTypes after lowercasing excludeFormats
+  this.config.excludeFormats = lowerCaseConfig(this.config.excludeFormats);
+  this.config.mediaTypes = lowerCaseConfig(this.config.mediaTypes);
+  const assetTypes = declareAssetTypes(this.config.mediaTypes, fileTypes);
+  this.config.assetTypes = assetTypes.filter(type => !this.config.excludeFormats.includes(type));
 
   // NON-CONFIGURABLES
   // Sockets setup
@@ -187,6 +195,15 @@ function distance(lat1, lon1, lat2, lon2) {
   dist = (dist * 180) / Math.PI;
   dist = dist * 60 * 1.1515;
   return dist;
+}
+
+function declareAssetTypes(mediaTypes, typesObj) {
+  return (
+    mediaTypes.reduce((includedTypes, mediaType) => includedTypes.concat(typesObj[mediaType]), [])
+  );
+}
+function lowerCaseConfig(arr) {
+  return arr.map(str => str.toLowerCase());
 }
 
 module.exports = PeerConnect;

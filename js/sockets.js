@@ -48,7 +48,7 @@ console.log('Am I on mobile?: ', isMobile);
 // Establish connection if not mobile
 // if mobile load from server and don't create a socket connection
 if (isMobile) {
-  loadAssetsFromServer()
+  loadAssetsFromServer();
 } else {
   socket = io.connect();
 }
@@ -150,7 +150,7 @@ let imageHeight;
 
 function handleOnData(data) {
   const dataString = data.toString();
-
+  console.log(dataString.slice(0,50))
   if (dataString.slice(0, 1) === '[') {
     const receivedCandidates = JSON.parse(data);
     receivedCandidates.forEach((ele) => {
@@ -250,14 +250,22 @@ function createInitiator(base) {
 
 // data chunking/parsing
 function sendAssetsToPeer(peer) {
+  // sendCounter is temp fix for when none of the formats are included in the assetTypes
+  // will change to identify this when foldLoading is changed
+  let sendCounter = 0;
   sendImageHeights(imageArray, peer);
   for (let i = 0; i < imageArray.length; i += 1) {
+    console.log('looping', i);
     const imageType = getImageType(imageArray[i]);
     if (configuration.assetTypes.includes(imageType)) {
+      console.log('this img is included')
       sendImage(imageArray[i], peer, i);
+      sendCounter += 1;
     }
     console.log('message sent');
   }
+  console.log('finished sending for loop');
+  if (!sendCounter) peer.destroy();
 }
 
 function sendImageHeights(imageArray, peer) {
@@ -276,18 +284,18 @@ function getImageType(image) {
 
 function sendImage(image, peer, imageIndex) {
   let data = getImageData(image);
-  let CHUNK_SIZE = 60000;
+  let CHUNK_SIZE = 64000;
   let n = data.length / CHUNK_SIZE;
   for (let f = 0; f < n; f++) {
     let start = f * CHUNK_SIZE;
     let end = (f + 1) * CHUNK_SIZE;
-    // console.log(data.slice(start, end));
     peer.send(data.slice(start, end))
   }
-  if (data.length % CHUNK_SIZE) {
-    console.log(data.slice(n * CHUNK_SIZE));
-    peer.send(data.slice(n * CHUNK_SIZE))
-  }
+  // // this part did not work and caused bugs
+  // // data.length % CHUNK_SIZE just returns length
+  // if (data.length % CHUNK_SIZE) {
+  //   peer.send(data.slice((data.length % CHUNK_SIZE) * -1))
+  // }
   peer.send(`FINISHED-YUY${imageIndex}`);
 }
 

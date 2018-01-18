@@ -13,7 +13,7 @@ const configuration = {};
 // candidates is an array of the ice candidates to send once p2p is established
 // socket placeholder is for when page is opened on mobile.
 // if no placeholder, browser logs reference error to socket.
-let socket = { on: () => {} };
+let socket = { on: () => { } };
 let p = null;
 let assetsDownloaded = false;
 let peerId = '';
@@ -91,7 +91,7 @@ socket.on('create_receiver_peer', (initiatorData, assetTypes, foldLoading) => {
   if (initiatorData.location) {
     const { location } = initiatorData;
     document.getElementById('peer_info').innerHTML +=
-    `<br>* Received data from ${location.city}, ${location.regionCode}, ${location.country} ${location.zipCode};`;
+      `<br>* Received data from ${location.city}, ${location.regionCode}, ${location.country} ${location.zipCode};`;
   }
 });
 
@@ -106,7 +106,7 @@ socket.on('answer_to_initiator', (message, peerLocation) => {
   document.getElementById('peer_info').style.display = '';
   if (peerLocation) {
     document.getElementById('peer_info').innerHTML +=
-    `<br>* Sent data to ${peerLocation.city}, ${peerLocation.regionCode}, ${peerLocation.country} ${peerLocation.zipCode};`;
+      `<br>* Sent data to ${peerLocation.city}, ${peerLocation.regionCode}, ${peerLocation.country} ${peerLocation.zipCode};`;
   }
 });
 
@@ -342,7 +342,7 @@ function checkForMobile() {
 function checkForImageError(imageArray) {
   for (let i = 0; i < imageArray.length; i++) {
     let source = imageArray[i].dataset.src;
-    imageArray[i].error = function() {
+    imageArray[i].error = function () {
       setServerImage(source);
     }
   }

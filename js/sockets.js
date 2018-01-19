@@ -13,7 +13,7 @@ const configuration = {};
 // candidates is an array of the ice candidates to send once p2p is established
 // socket placeholder is for when page is opened on mobile.
 // if no placeholder, browser logs reference error to socket.
-// let socket = { on: () => {} };
+let socket = { on: () => {} };
 let p = null;
 let assetsDownloaded = false;
 let peerId = '';
@@ -40,15 +40,16 @@ imageArray.forEach((image, index) => image.setAttribute('id', index));
 
 // checks if broswer is opened from mobile
 const isMobile = checkForMobile();
+const browserSupport = !!RTCPeerConnection;
+console.log(browserSupport)
 
-// // Establish connection if not mobile
-// // if mobile load from server and don't create a socket connection
-// if (isMobile) {
-//   loadAssetsFromServer();
-// } else {
-//   socket = io.connect();
-// }
-const socket = io.connect();
+// Establish connection if not mobile
+// if mobile load from server and don't create a socket connection
+if (!browserSupport) {
+  loadAssetsFromServer();
+} else {
+  socket = io.connect();
+}
 
 // server is empty or assets downloaded so create initiator
 socket.on('create_base_initiator', (assetTypes, foldLoading) => {

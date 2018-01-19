@@ -32,7 +32,7 @@ const peerConfig = {
   // asset file formats to exclude from peers
   excludeFormats: ['gif'],
   // load images above the fold from server if foldLoading: true
-  foldLoading: true,
+  foldLoading: false,
   // toggle geolocation for pairing peers
   geolocate: true,
 };

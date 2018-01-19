@@ -213,12 +213,12 @@ function loopImage() {
       const imageSource = imageArray[i].dataset.src;
       const extension = getImageType(imageArray[i]);
       console.log(`${isElementInViewport(imageArray[i])} is: from ${i}`);
-      const foldLoading = configuration.foldLoading ? isElementInViewport(imageArray[i]) : false;
+      // const foldLoading = configuration.foldLoading ? isElementInViewport(imageArray[i]) : false;
       if (!configuration.assetTypes.includes(extension)) {
         extCounter += 1;
         setServerImage(imageSource);
       }
-      if (foldLoading) {
+      if (configuration.foldLoading) {
         setServerImage(imageSource);
       }
     }
@@ -230,7 +230,7 @@ function loopImage() {
 function setImage(imageData, imageArray, index) {
   console.log('Received all data for an image. Setting image.');
   counter += 1;
-  if (!isElementInViewport(imageArray[index])) {
+  if (!isElementInViewport(imageArray[index]) && configuration.foldLoading|| !configuration.foldLoading) {
     if (imageData.slice(0, 9) === 'undefined') imageArray[index].src = imageData.slice(9);
     else imageArray[index].src = imageData;
   }
@@ -263,15 +263,12 @@ function createInitiator(base) {
 
 // data chunking/parsing
 function sendAssetsToPeer(peer) {
-
-
   //send heights of images to peer
   sendImageHeights(imageArray, peer);
-
   for (let i = 0; i < imageArray.length; i += 1) {
     const imageType = getImageType(imageArray[i]);
     if (configuration.assetTypes.includes(imageType)) {
-      // sendImage(imageArray[i], peer, i);
+      sendImage(imageArray[i], peer, i);
     }
     // console.log('File sent.');
   }
@@ -330,7 +327,6 @@ function getImageData(image) {
 }
 
 function isElementInViewport(el) {
-  console.log('el is: ', el)
   const rect = el.getBoundingClientRect();
   return (
     rect.top >= 0 &&

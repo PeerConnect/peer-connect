@@ -35,17 +35,16 @@ let connectionDestroyedTime;
 let imageArray = Object.values(document.getElementsByTagName('img'));
 imageArray = imageArray.filter(node => node.hasAttribute('data-src'));
 
-//assign ids to image
+// assign ids to image
 imageArray.forEach((image, index) => image.setAttribute('id', index));
 
 // checks if broswer is opened from mobile
 const isMobile = checkForMobile();
-console.log('Am I on mobile?: ', isMobile);
 
 // Establish connection if not mobile
 // if mobile load from server and don't create a socket connection
 if (isMobile) {
-  loadAssetsFromServer()
+  loadAssetsFromServer();
 } else {
   socket = io.connect();
 }
@@ -67,6 +66,19 @@ socket.on('create_base_initiator', (assetTypes, foldLoading) => {
 // sent a stored offer object from an avaliable initiator
 socket.on('create_receiver_peer', (initiatorData, assetTypes, foldLoading) => {
   console.log('creating receiver peer');
+  // checks if none of the asset types are to be sent through P2P
+  // if none, load straight from server
+  let P2PFlag = false;
+  imageArray.forEach((image) => {
+    for (let i = 0; i < assetTypes.length; i += 1) {
+      if ((image.dataset.src).slice(-5).includes(assetTypes[i])) P2PFlag = true;
+    }
+  });
+  if (!P2PFlag) {
+    loadAssetsFromServer();
+    return;
+  }
+
   // save peer configuration object to front end for peer
   configuration.assetTypes = assetTypes;
   configuration.foldLoading = foldLoading;
@@ -79,7 +91,6 @@ socket.on('create_receiver_peer', (initiatorData, assetTypes, foldLoading) => {
   p.signal(initiatorData.offer);
   // peerId is the socket id of the avaliable initiator that this peer will pair with
   peerId = initiatorData.peerId;
-  // location data of peer to render on page for demo
 
   document.getElementsByClassName('loading_gif')[0].style.display = 'none';
   document.getElementById('downloaded_from').innerHTML = 'Assets downloaded from a PEER!';
@@ -148,7 +159,6 @@ let imageHeight;
 
 function handleOnData(data) {
   const dataString = data.toString();
-
   if (dataString.slice(0, 1) === '[') {
     const receivedCandidates = JSON.parse(data);
     receivedCandidates.forEach((ele) => {
@@ -173,8 +183,8 @@ function handleOnData(data) {
 
   if (dataString.slice(0, 12) == "FINISHED-YUY") {
     let imageIndex = data.slice(12);
-    // console.log('imageArray is: ', imageArray[imageIndex]);
-    //append time it took to receive image data
+
+    // append time it took to receive image data
     document.getElementById(imageIndex).parentNode.appendChild(document.createTextNode(`${new Date() - currentTime} ms`));
     currentTime = new Date();
     setImage(imageData, imageArray, imageIndex);
@@ -201,8 +211,7 @@ function loopImage() {
     for (let i = 0; i < imageArray.length; i += 1) {
       const imageSource = imageArray[i].dataset.src;
       const extension = getImageType(imageArray[i]);
-      // console.log('imageArray[i]: ', imageArray[i])
-      console.log(`${isElementInViewport(imageArray[i])} is: from ${i}`)
+      console.log(`${isElementInViewport(imageArray[i])} is: from ${i}`);
       const foldLoading = configuration.foldLoading ? isElementInViewport(imageArray[i]) : false;
       if (!configuration.assetTypes.includes(extension)) {
         extCounter += 1;
@@ -255,7 +264,7 @@ function sendAssetsToPeer(peer) {
     if (configuration.assetTypes.includes(imageType)) {
       sendImage(imageArray[i], peer, i);
     }
-    console.log('message sent');
+    // console.log('File sent.');
   }
 }
 
@@ -264,7 +273,6 @@ function sendImageHeights(imageArray, peer) {
   for (let f = 0; f < imageArray.length; f++) {
     imageHeights.push(imageArray[f].height);
   }
-  console.log('imageHeights is: ', imageHeights)
   peer.send(`test123 ${JSON.stringify(imageHeights)}`);
 }
 
@@ -275,27 +283,24 @@ function getImageType(image) {
 }
 
 function sendImage(image, peer, imageIndex) {
-  let data = getImageData(image);
-  let CHUNK_SIZE = 60000;
-  let n = data.length / CHUNK_SIZE;
-  for (let f = 0; f < n; f++) {
-    let start = f * CHUNK_SIZE;
-    let end = (f + 1) * CHUNK_SIZE;
+  const data = getImageData(image);
+  const CHUNK_SIZE = 64000;
+  const n = data.length / CHUNK_SIZE;
+  let start;
+  let end;
+  for (let f = 0; f < n; f += 1) {
+    start = f * CHUNK_SIZE;
+    end = (f + 1) * CHUNK_SIZE;
     peer.send(data.slice(start, end));
+    console.log(`File part ${f} sent.`);
   }
-  if (data.length % CHUNK_SIZE) {
-    peer.send(data.slice(n * CHUNK_SIZE));
-  }
+  console.log('File fully sent.');
   peer.send(`FINISHED-YUY${imageIndex}`);
 }
 
 // download assets from server
 function loadAssetsFromServer() {
   console.log('LOAD ASSETS FROM SERVER');
-
-  // take off loading gif
-  // document.getElementsByClassName('loading_gif')[0].style.display = 'none';
-
   for (let i = 0; i < imageArray.length; i += 1) {
     const imageSrc = imageArray[i].dataset.src;
     setServerImage(imageSrc);

@@ -3,13 +3,27 @@
 const socket = require('socket.io');
 const fetch = require('node-fetch');
 
+// all filetypes
+const fileTypes = {
+  image: ['jpeg', 'jpg', 'png', 'gif'],
+  video: ['mp4', 'avi', 'flv', 'wmv', 'mov'],
+  audio: ['mp3', 'wma', 'wav'],
+};
+
 function PeerConnect(config, server) {
   // DEFAULT CONFIGURABLES
-  this.config = config;
-  this.threshold = config.threshold || 1;
-  this.assetTypes = config.assetTypes || ['jpg', 'jpeg'];
-  this.foldLoading = config.foldLoading !== false; // default true
-  this.geolocate = config.geolocate; // defaults to undefined
+  this.config = { ...config }; // eslint rules: parameters should be immutable
+  this.config.threshold = this.config.threshold || 1;
+  this.config.foldloading = this.config.foldLoading !== false; // default true
+  this.config.geolocate = this.config.geolocate; // defaults to undefined
+
+  // REFERENCED CONFIGURABLES
+  // include the inputted media types
+  // filter out the excluded assetTypes after lowercasing excludeFormats
+  this.config.excludeFormats = lowerCaseConfig(this.config.excludeFormats);
+  this.config.mediaTypes = lowerCaseConfig(this.config.mediaTypes);
+  const assetTypes = declareAssetTypes(this.config.mediaTypes, fileTypes);
+  this.config.assetTypes = assetTypes.filter(type => !this.config.excludeFormats.includes(type));
 
   // NON-CONFIGURABLES
   // Sockets setup
@@ -34,7 +48,7 @@ function PeerConnect(config, server) {
     };
 
     // creation of peers handled here
-    if (this.geolocate) {
+    if (this.config.geolocate) {
       // cip is the client's ip address
       // if localhost use static ip
       this.staticIP = '45.59.229.42';
@@ -56,24 +70,24 @@ function PeerConnect(config, server) {
           this.activeClients[client.id].location = location;
           // create base initiator if no avaliable initiator
           // initiators avaliable, create receiver
-          if (this.serverStats.numInitiators < this.threshold) {
+          if (this.serverStats.numInitiators < this.config.threshold) {
             createBaseInitiator(client, this.config);
           } else {
-            createReceiver(client, this.activeClients, config, this.serverStats);
+            createReceiver(client, this.activeClients, this.config, this.serverStats);
           }
         })
         .catch((err) => {
         // if API fetch fails, turn of geolocate and create new initiator
           console.log(err);
-          createBaseInitiator(client, config);
+          createBaseInitiator(client, this.config);
         });
     } else {
       // if geolocate is off
-      if (this.serverStats.numInitiators < this.threshold) {
-        createBaseInitiator(client, config);
+      if (this.serverStats.numInitiators < this.config.threshold) {
+        createBaseInitiator(client, this.config);
       }
-      if (this.serverStats.numInitiators >= this.threshold) {
-        createReceiver(client, this.activeClients, config, this.serverStats);
+      if (this.serverStats.numInitiators >= this.config.threshold) {
+        createReceiver(client, this.activeClients, this.config, this.serverStats);
       }
     }
     // Initiator sent offer object to server.
@@ -182,6 +196,15 @@ function distance(lat1, lon1, lat2, lon2) {
   dist = (dist * 180) / Math.PI;
   dist = dist * 60 * 1.1515;
   return dist;
+}
+
+function declareAssetTypes(mediaTypes, typesObj) {
+  return (
+    mediaTypes.reduce((includedTypes, mediaType) => includedTypes.concat(typesObj[mediaType]), [])
+  );
+}
+function lowerCaseConfig(arr) {
+  return arr.map(str => str.toLowerCase());
 }
 
 module.exports = PeerConnect;

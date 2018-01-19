@@ -39,16 +39,15 @@ imageArray = imageArray.filter(node => node.hasAttribute('data-src'));
 imageArray.forEach((image, index) => image.setAttribute('id', index));
 
 // checks if broswer is opened from mobile
-let isMobile = checkForMobile();
-isMobile = false;
+const isMobile = checkForMobile();
 
-// Establish connection if not mobile
-// if mobile load from server and don't create a socket connection
-if (isMobile) {
-  loadAssetsFromServer();
-} else {
-  socket = io.connect();
-}
+// // Establish connection if not mobile
+// // if mobile load from server and don't create a socket connection
+// if (isMobile) {
+//   loadAssetsFromServer();
+// } else {
+//   socket = io.connect();
+// }
 
 // server is empty or assets downloaded so create initiator
 socket.on('create_base_initiator', (assetTypes, foldLoading) => {

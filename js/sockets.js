@@ -40,12 +40,11 @@ imageArray.forEach((image, index) => image.setAttribute('id', index));
 
 // checks if broswer is opened from mobile
 const isMobile = checkForMobile();
-console.log('Am I on mobile?: ', isMobile);
 
 // Establish connection if not mobile
 // if mobile load from server and don't create a socket connection
 if (isMobile) {
-  loadAssetsFromServer()
+  loadAssetsFromServer();
 } else {
   socket = io.connect();
 }
@@ -148,7 +147,6 @@ let imageHeight;
 
 function handleOnData(data) {
   const dataString = data.toString();
-
   if (dataString.slice(0, 1) === '[') {
     const receivedCandidates = JSON.parse(data);
     receivedCandidates.forEach((ele) => {
@@ -173,8 +171,8 @@ function handleOnData(data) {
 
   if (dataString.slice(0, 12) == "FINISHED-YUY") {
     let imageIndex = data.slice(12);
-    // console.log('imageArray is: ', imageArray[imageIndex]);
-    //append time it took to receive image data
+
+    // append time it took to receive image data
     document.getElementById(imageIndex).parentNode.appendChild(document.createTextNode(`${new Date() - currentTime} ms`));
     currentTime = new Date();
     setImage(imageData, imageArray, imageIndex);
@@ -201,8 +199,7 @@ function loopImage() {
     for (let i = 0; i < imageArray.length; i += 1) {
       const imageSource = imageArray[i].dataset.src;
       const extension = getImageType(imageArray[i]);
-      // console.log('imageArray[i]: ', imageArray[i])
-      console.log(`${isElementInViewport(imageArray[i])} is: from ${i}`)
+      console.log(`${isElementInViewport(imageArray[i])} is: from ${i}`);
       const foldLoading = configuration.foldLoading ? isElementInViewport(imageArray[i]) : false;
       if (!configuration.assetTypes.includes(extension)) {
         extCounter += 1;
@@ -249,14 +246,19 @@ function createInitiator(base) {
 
 // data chunking/parsing
 function sendAssetsToPeer(peer) {
+  // sendCounter is temp fix for when none of the formats are included in the assetTypes
+  // will change to identify this when foldLoading is changed
+  let sendCounter = 0;
   sendImageHeights(imageArray, peer);
   for (let i = 0; i < imageArray.length; i += 1) {
     const imageType = getImageType(imageArray[i]);
     if (configuration.assetTypes.includes(imageType)) {
       sendImage(imageArray[i], peer, i);
+      sendCounter += 1;
     }
     console.log('message sent');
   }
+  if (!sendCounter) peer.destroy();
 }
 
 function sendImageHeights(imageArray, peer) {
@@ -264,7 +266,6 @@ function sendImageHeights(imageArray, peer) {
   for (let f = 0; f < imageArray.length; f++) {
     imageHeights.push(imageArray[f].height);
   }
-  console.log('imageHeights is: ', imageHeights)
   peer.send(`test123 ${JSON.stringify(imageHeights)}`);
 }
 
@@ -275,16 +276,15 @@ function getImageType(image) {
 }
 
 function sendImage(image, peer, imageIndex) {
-  let data = getImageData(image);
-  let CHUNK_SIZE = 60000;
-  let n = data.length / CHUNK_SIZE;
-  for (let f = 0; f < n; f++) {
-    let start = f * CHUNK_SIZE;
-    let end = (f + 1) * CHUNK_SIZE;
+  const data = getImageData(image);
+  const CHUNK_SIZE = 64000;
+  const n = data.length / CHUNK_SIZE;
+  let start;
+  let end;
+  for (let f = 0; f < n; f += 1) {
+    start = f * CHUNK_SIZE;
+    end = (f + 1) * CHUNK_SIZE;
     peer.send(data.slice(start, end));
-  }
-  if (data.length % CHUNK_SIZE) {
-    peer.send(data.slice(n * CHUNK_SIZE));
   }
   peer.send(`FINISHED-YUY${imageIndex}`);
 }

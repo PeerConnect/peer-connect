@@ -39,7 +39,8 @@ imageArray = imageArray.filter(node => node.hasAttribute('data-src'));
 imageArray.forEach((image, index) => image.setAttribute('id', index));
 
 // checks if broswer is opened from mobile
-const isMobile = checkForMobile();
+let isMobile = checkForMobile();
+isMobile = false;
 
 // Establish connection if not mobile
 // if mobile load from server and don't create a socket connection

@@ -18,14 +18,21 @@
   },
   "homepage": "https://github.com/PeerConnect/peer-connect#readme",
   "dependencies": {
+    "eslint-config-airbnb": "^16.1.0",
+    "eslint-plugin-jsx-a11y": "^6.0.3",
+    "eslint-plugin-react": "^7.5.1",
     "express": "^4.16.2",
     "node-fetch": "^1.7.3",
     "path": "^0.12.7",
     "simple-peer": "^8.2.0",
     "socket.io": "^2.0.4",
+    "webtorrent": "^0.98.20",
     "wrtc": "0.0.65"
   },
   "devDependencies": {
+    "eslint": "^4.15.0",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-plugin-import": "^2.8.0",
     "nodemon": "^1.14.7"
   }
 }

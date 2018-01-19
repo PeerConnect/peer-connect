@@ -34,7 +34,6 @@ let connectionDestroyedTime;
 // get img tag nodes
 let imageArray = Object.values(document.getElementsByTagName('img'));
 imageArray = imageArray.filter(node => node.hasAttribute('data-src'));
-let imageArrayClone;
 
 // assign ids to image
 imageArray.forEach((image, index) => image.setAttribute('id', index));
@@ -42,10 +41,8 @@ imageArray.forEach((image, index) => image.setAttribute('id', index));
 // checks if broswer is opened from mobile
 const isMobile = checkForMobile();
 const browserSupport = !!RTCPeerConnection;
-console.log(browserSupport)
 
-// Establish connection if not mobile
-// if mobile load from server and don't create a socket connection
+// if webrtc not supported, load from server
 if (!browserSupport) {
   loadAssetsFromServer();
 } else {
@@ -345,6 +342,7 @@ function reportTime(time, currentOrTotal, domId) {
   currentTime = new Date();
 }
 
+// Check if mobile. Mobile users don't become initiators.
 function checkForMobile() {
   testExp = new RegExp('Android|webOS|iPhone|iPad|BlackBerry|Windows Phone|Opera Mini|IEMobile|Mobile', 'i');
   return !!testExp.test(navigator.userAgent);

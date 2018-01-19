@@ -18,6 +18,7 @@ let p = null;
 let assetsDownloaded = false;
 let peerId = '';
 let candidates = [];
+let connectionFlag = false;
 
 // global variables for data parsing/transfer and lazy image loading
 let imageData;
@@ -111,6 +112,8 @@ socket.on('answer_to_initiator', (message, peerLocation) => {
   // handleOnSignal/.on('signal'), it goes handleOnConnect.
   p.signal(message);
 
+  setTimeout(checkForConnection, 3000);
+
   // location data of peer to render on page for demo
   document.getElementById('peer_info').style.display = '';
   if (peerLocation) {
@@ -130,6 +133,7 @@ function handleOnSignal(data) {
   if (data.type === 'answer') {
     console.log('Emitting answer_to_server.');
     socket.emit('answer_to_server', { answer: data, peerId });
+    setTimeout(checkForConnection, 3500);
   }
   // After the offer/answer object is generated, ice candidates are generated as
   // well. These are stored to be sent after the P2P connection is established.
@@ -141,6 +145,7 @@ function handleOnSignal(data) {
 // handles when peers are connected through P2P
 function handleOnConnect() {
   console.log('CONNECTED');
+  connectionFlag = true;
   reportTime(peersConnectedTime, currentTime, 'time_to_connect');
   // send ice candidates if exist
   if (candidates.length) {
@@ -152,6 +157,14 @@ function handleOnConnect() {
   if (assetsDownloaded) {
     sendAssetsToPeer(p);
   }
+}
+
+function checkForConnection() {
+  console.log('checking for connection')
+  if (!connectionFlag) {
+    p.disconnect();
+  }
+  connectionFlag = false;
 }
 
 let imageHeight;
@@ -246,7 +259,9 @@ function setImageHeights(dataString, imageArray) {
   });
 }
 
-// Creates an initiator (therefore emitting a signal that creates an offer). The base parameter determines if initiator should download assets from server (example: there are no other initiators connected or client's peer got disconnected).
+// Creates an initiator (therefore emitting a signal that creates an offer).
+// The base parameter determines if initiator should download assets from server
+// Example: there are no other initiators connected or client's peer got disconnected.
 function createInitiator(base) {
   if (base) {
     loadAssetsFromServer();

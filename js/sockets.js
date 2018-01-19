@@ -203,12 +203,13 @@ function loopImage() {
       const extension = getImageType(imageArray[i]);
       // console.log('imageArray[i]: ', imageArray[i])
       console.log(`${isElementInViewport(imageArray[i])} is: from ${i}`)
-      const foldLoading = configuration.foldLoading ? isElementInViewport(imageArray[i]) : false;
+      // const foldLoading = configuration.foldLoading ? isElementInViewport(imageArray[i]) : false;
       if (!configuration.assetTypes.includes(extension)) {
         extCounter += 1;
         setServerImage(imageSource);
       }
-      if (foldLoading) {
+      if (configuration.foldLoading && isElementInViewport(imageArray[i])) {
+        console.log('hit')
         setServerImage(imageSource);
       }
     }
@@ -220,7 +221,7 @@ function loopImage() {
 function setImage(imageData, imageArray, index) {
   console.log('Received all data for an image. Setting image.');
   counter += 1;
-  if (!isElementInViewport(imageArray[index])) {
+  if (!isElementInViewport(imageArray[index]) && configuration.foldLoading || !configuration.foldLoading) {
     if (imageData.slice(0, 9) === 'undefined') imageArray[index].src = imageData.slice(9);
     else imageArray[index].src = imageData;
   }

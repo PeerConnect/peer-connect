@@ -10,8 +10,8 @@
 /* eslint no-use-before-define: ["error", { "functions": false }] */
 
 const Peer = require('simple-peer');
-const peerMethods = function (peer) {
 
+const peerMethods = function (peer) {
   peer.on("error", err => {
     console.log(err)
   });

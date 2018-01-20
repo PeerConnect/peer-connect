@@ -158,18 +158,17 @@ socket.on('magnet_uri', () => {
     })
   
     res.on('end', function () {
-      data = Buffer.concat(data) // Make one large Buffer of it
+      let newData = Buffer.concat(data) // Make one large Buffer of it
   
-      let torrentParsed = parseTorrent(data) // Parse the Buffer
+      let torrentParsed = parseTorrent(newData) // Parse the Buffer
       const client = new WebTorrent()
   
       client.add(torrentParsed, onTorrent)
     });
   
     function onTorrent (torrent) {
+      console.log(torrent.wires.length);
       torrent.files.forEach(function (file) {
-        // console.log(torrent.wires.length);
-        
         file.renderTo('#video');
       });
     }

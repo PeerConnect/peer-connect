@@ -37,28 +37,22 @@ const peerMethods = function (peer) {
 const configuration = {};
 
 // placeholder for webrtc peer and socket
-// track if assets have been downloaded, determines if peer can be an initiator
-// peerID is the the socket.id of the initiator.
-// candidates is an array of the ice candidates to send once p2p is established
 // socket placeholder is for when page is opened on mobile.
 // if no placeholder, browser logs reference error to socket.
 let socket = { on: () => { } };
 let p = null;
+// track if assets have been downloaded, determines if peer can be an initiator
 let assetsDownloaded = false;
+// peerID is the the socket.id of the initiator.
 let peerId = '';
+// candidates is an array of the ice candidates to send once p2p is established
 let candidates = [];
 
-// global variables for data parsing/transfer and lazy image loading
+// global variables for data parsing/transfer and fold image loading
 let imageData;
 let counter = 0;
 let extCounter = 0;
 let otherCounter = 0;
-
-// used to time the asset load time
-const browserOpenTime = new Date();
-let currentTime = new Date();
-let peersConnectedTime;
-let connectionDestroyedTime;
 
 // get img tag nodes
 let imageArray = Object.values(document.getElementsByTagName('img'));
@@ -83,9 +77,7 @@ socket.on('create_base_initiator', (assetTypes, foldLoading) => {
   // save peer configuration object to front end for host
   configuration.assetTypes = assetTypes;
   configuration.foldLoading = foldLoading;
-  document.getElementsByClassName('loading_gif')[0].style.display = 'none';
-  document.getElementById('downloaded_from').innerHTML = 'Assets downloaded from the SERVER!';
-  document.getElementById('downloaded_from').style.display = '';
+  demoFunctions.assetsFromServer();
   // download assets from server, create initiator peer
   // tell server assets were downloaded and send answer object to server
   // (this happens when new peer is created with initiator key true)
@@ -121,16 +113,7 @@ socket.on('create_receiver_peer', (initiatorData, assetTypes, foldLoading) => {
   // peerId is the socket id of the avaliable initiator that this peer will pair with
   peerId = initiatorData.peerId;
 
-  document.getElementsByClassName('loading_gif')[0].style.display = 'none';
-  document.getElementById('downloaded_from').innerHTML = 'Assets downloaded from a PEER!';
-  document.getElementById('downloaded_from').style.display = '';
-  document.getElementById('report').style.display = '';
-  document.getElementById('peer_info').style.display = '';
-  if (initiatorData.location) {
-    const { location } = initiatorData;
-    document.getElementById('peer_info').innerHTML +=
-      `<br>* Received data from ${location.city}, ${location.regionCode}, ${location.country} ${location.zipCode};`;
-  }
+  demoFunctions.assetsFromPeer(initiatorData);
 });
 
 // answer object has arrived to the initiator. Connection will when the signal(message) is invoked.
@@ -140,33 +123,28 @@ socket.on('answer_to_initiator', (message, peerLocation) => {
   // handleOnSignal/.on('signal'), it goes handleOnConnect.
   p.signal(message);
 
-  // location data of peer to render on page for demo
-  document.getElementById('peer_info').style.display = '';
-  if (peerLocation) {
-    document.getElementById('peer_info').innerHTML +=
-      `<br>* Sent data to ${peerLocation.city}, ${peerLocation.regionCode}, ${peerLocation.country} ${peerLocation.zipCode};`;
-  }
+  demoFunctions.sentDataToPeerLocation(peerLocation);
 });
 
 socket.on('magnet_uri', () => {
   http.get('/torrent', function (res) {
     const data = [];
-  
+
     res.on('data', function (chunk) {
       data.push(chunk);
       // console.log(data);
     })
-  
+
     res.on('end', function () {
       let newData = Buffer.concat(data) // Make one large Buffer of it
-  
+
       let torrentParsed = parseTorrent(newData) // Parse the Buffer
       const client = new WebTorrent()
-  
+
       client.add(torrentParsed, onTorrent)
     });
-  
-    function onTorrent (torrent) {
+
+    function onTorrent(torrent) {
       console.log(torrent.wires.length);
       torrent.files.forEach(function (file) {
         file.renderTo('#video');
@@ -197,7 +175,7 @@ function handleOnSignal(data) {
 // handles when peers are connected through P2P
 function handleOnConnect() {
   console.log('CONNECTED');
-  reportTime(peersConnectedTime, currentTime, 'time_to_connect');
+  demoFunctions.reportTime(demoFunctions.currentTime, 'time_to_connect');
   // send ice candidates if exist
   if (candidates.length) {
     console.log(`Sending ${candidates.length} ice candidates.`);
@@ -241,20 +219,20 @@ function handleOnData(data) {
     let imageIndex = data.slice(12);
 
     // append time it took to receive image data
-    document.getElementById(imageIndex).parentNode.appendChild(document.createTextNode(`${new Date() - currentTime} ms`));
-    currentTime = new Date();
+    demoFunctions.appendTime(imageIndex, demoFunctions.currentTime);
+    demoFunctions.currentTime = new Date();
     setImage(imageData, imageArray, imageIndex);
     imageData = '';
     if (counter + extCounter === imageArray.length) {
       console.log('All assets downloaded!');
       assetsDownloaded = true;
       console.log('DESTROYING PEERS');
-      reportTime(connectionDestroyedTime, currentTime, 'time_to_destroy');
-      reportTime(connectionDestroyedTime, browserOpenTime, 'time_total');
-      currentTime = new Date();
+      demoFunctions.reportTime(demoFunctions.currentTime, 'time_to_destroy');
+      demoFunctions.reportTime(demoFunctions.browserOpenTime, 'time_total');
+      demoFunctions.currentTime = new Date();
       p.destroy();
       checkForImageError(imageArray);
-      document.getElementById('downloaded_from').innerHTML = 'Assets got from PEER!!';
+      demoFunctions.assetsFromPeerMessage();
     }
   } else {
     imageData += dataString;
@@ -285,7 +263,7 @@ function loopImage() {
 function setImage(imageData, imageArray, index) {
   console.log('Received all data for an image. Setting image.');
   counter += 1;
-  if (!isElementInViewport(imageArray[index]) && configuration.foldLoading|| !configuration.foldLoading) {
+  if (!isElementInViewport(imageArray[index]) && configuration.foldLoading || !configuration.foldLoading) {
     if (imageData.slice(0, 9) === 'undefined') imageArray[index].src = imageData.slice(9);
     else imageArray[index].src = imageData;
   }
@@ -367,7 +345,7 @@ function loadAssetsFromServer() {
     setServerImage(imageSrc);
   }
   // report time it took to load assets from server
-  document.getElementById('time_total_from_server').innerHTML = `Time it took to load from server: ${new Date() - browserOpenTime} ms  `;
+  demoFunctions.timeTotalFromServer(demoFunctions.browserOpenTime);
 }
 
 function getImageData(image) {
@@ -389,13 +367,6 @@ function isElementInViewport(el) {
     rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
     rect.right <= (window.innerWidth || document.documentElement.clientWidth)
   );
-}
-
-// function that reports time to DOM
-function reportTime(time, currentOrTotal, domId) {
-  time = new Date();
-  document.getElementById(domId).innerHTML += `<span class="bold">${time - currentOrTotal} ms</span>`;
-  currentTime = new Date();
 }
 
 // Check if mobile. Mobile users don't become initiators.

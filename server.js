@@ -23,8 +23,9 @@ app.use((req, res, next) => {
 });
 
 app.get('/torrent', (req, res) => {
-  res.sendFile(path.resolve(__dirname, './assets/cityscape-chicago-ii.torrent'));
-})
+  res.sendFile(path.resolve(__dirname, './tiger.torrent'));
+});
+
 
 // PeerConnect configuration
 const peerConfig = {

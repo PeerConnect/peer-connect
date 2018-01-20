@@ -145,6 +145,33 @@ socket.on('answer_to_initiator', (message, peerLocation) => {
   }
 });
 
+socket.on('magnet_uri', () => {
+  http.get('/torrent', function (res) {
+    const data = [];
+  
+    res.on('data', function (chunk) {
+      data.push(chunk);
+      console.log(data);
+    })
+  
+    res.on('end', function () {
+      data = Buffer.concat(data) // Make one large Buffer of it
+  
+      const torrentParsed = parseTorrent(data) // Parse the Buffer
+  
+      const client = new WebTorrent()
+  
+      client.add(torrentParsed, onTorrent)
+    });
+  
+    function onTorrent (torrent) {
+      torrent.files.forEach(function (file) {
+        file.renderTo('#video');
+      });
+    }
+  });
+});
+
 // handles all signals
 function handleOnSignal(data) {
   // send offer object to server for server to store

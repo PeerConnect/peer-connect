@@ -26,6 +26,7 @@
     "path": "^0.12.7",
     "simple-peer": "^8.2.0",
     "socket.io": "^2.0.4",
+    "webtorrent": "^0.98.20",
     "wrtc": "0.0.65"
   },
   "devDependencies": {

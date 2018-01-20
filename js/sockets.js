@@ -2,6 +2,9 @@
 /* eslint no-use-before-define: ["error", { "functions": false }] */
 
 const Peer = require('simple-peer');
+const parseTorrent = require('parse-torrent');
+const http = require('stream-http');
+const WebTorrent = require('webtorrent');
 
 const peerMethods = function (peer) {
   peer.on("error", err => {
@@ -151,14 +154,13 @@ socket.on('magnet_uri', () => {
   
     res.on('data', function (chunk) {
       data.push(chunk);
-      console.log(data);
+      // console.log(data);
     })
   
     res.on('end', function () {
       data = Buffer.concat(data) // Make one large Buffer of it
   
-      const torrentParsed = parseTorrent(data) // Parse the Buffer
-  
+      let torrentParsed = parseTorrent(data) // Parse the Buffer
       const client = new WebTorrent()
   
       client.add(torrentParsed, onTorrent)
@@ -166,6 +168,8 @@ socket.on('magnet_uri', () => {
   
     function onTorrent (torrent) {
       torrent.files.forEach(function (file) {
+        // console.log(torrent.wires.length);
+        
         file.renderTo('#video');
       });
     }

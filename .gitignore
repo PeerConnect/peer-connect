@@ -5,4 +5,4 @@ node_modules
 .DS_Store?
 *.log
 npm-debug.log*
-bundle.js
+client/bundle.js

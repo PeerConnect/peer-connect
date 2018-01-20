@@ -24,8 +24,10 @@ function listeners(peer) {
     handleOnData(data);
   });
 
+  // if mobile, don't become initiator.
   peer.on('close', () => {
     console.log('P2P closed');
+    if (isMobile) return;
     return assetsDownloaded ? createInitiator() : createInitiator('base');
   });
 }

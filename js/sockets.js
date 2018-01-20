@@ -1,8 +1,34 @@
 /* eslint-env browser */
 /* eslint no-use-before-define: ["error", { "functions": false }] */
 
-const Peer = SimplePeer;
-const peerMethods = listeners;
+const Peer = require('simple-peer');
+
+const peerMethods = function (peer) {
+  peer.on("error", err => {
+    console.log(err)
+  });
+
+  /* Signal is automatically called when a new peer is created with {initiator:true} parameter. This generates the offer object to be sent to the peer.
+  Upon receiving the offer object by the receiver, invoke p.signal with the offer object as its parameter. This will generate the answer object. Do the same with the host with the answer object. */
+  peer.on("signal", (data) => {
+    handleOnSignal(data, peerId)
+  });
+
+  // listener for when P2P is established. Ice candidates sent first, then media data itself.
+  peer.on('connect', () => {
+    handleOnConnect();
+  })
+
+  // listener for when data is being received
+  peer.on('data', function (data) {
+    handleOnData(data)
+  })
+
+  peer.on('close', function () {
+    console.log('P2P closed')
+    assetsDownloaded ? createInitiator() : createInitiator('base')
+  })
+};
 
 // peer configuration object from server
 const configuration = {};
@@ -13,7 +39,7 @@ const configuration = {};
 // candidates is an array of the ice candidates to send once p2p is established
 // socket placeholder is for when page is opened on mobile.
 // if no placeholder, browser logs reference error to socket.
-let socket = { on: () => {} };
+let socket = { on: () => { } };
 let p = null;
 let assetsDownloaded = false;
 let peerId = '';
@@ -100,7 +126,7 @@ socket.on('create_receiver_peer', (initiatorData, assetTypes, foldLoading) => {
   if (initiatorData.location) {
     const { location } = initiatorData;
     document.getElementById('peer_info').innerHTML +=
-    `<br>* Received data from ${location.city}, ${location.regionCode}, ${location.country} ${location.zipCode};`;
+      `<br>* Received data from ${location.city}, ${location.regionCode}, ${location.country} ${location.zipCode};`;
   }
 });
 
@@ -115,7 +141,7 @@ socket.on('answer_to_initiator', (message, peerLocation) => {
   document.getElementById('peer_info').style.display = '';
   if (peerLocation) {
     document.getElementById('peer_info').innerHTML +=
-    `<br>* Sent data to ${peerLocation.city}, ${peerLocation.regionCode}, ${peerLocation.country} ${peerLocation.zipCode};`;
+      `<br>* Sent data to ${peerLocation.city}, ${peerLocation.regionCode}, ${peerLocation.country} ${peerLocation.zipCode};`;
   }
 });
 
@@ -351,7 +377,7 @@ function checkForMobile() {
 function checkForImageError(imageArray) {
   for (let i = 0; i < imageArray.length; i++) {
     let source = imageArray[i].dataset.src;
-    imageArray[i].error = function() {
+    imageArray[i].error = function () {
       setServerImage(source);
     }
   }

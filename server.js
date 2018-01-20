@@ -22,6 +22,11 @@ app.use((req, res, next) => {
   next();
 });
 
+app.get('/torrent', (req, res) => {
+  res.sendFile(path.resolve(__dirname, './assets/torrent/tiger.torrent'));
+});
+
+
 // PeerConnect configuration
 const peerConfig = {
   // how many peers must be connected before loading assets from peers

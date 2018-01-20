@@ -54,13 +54,6 @@ let counter = 0;
 let extCounter = 0;
 let otherCounter = 0;
 
-// DEMO VARIABLES
-// used to time the asset load time
-const browserOpenTime = new Date();
-let currentTime = new Date();
-let peersConnectedTime;
-let connectionDestroyedTime;
-
 // get img tag nodes
 let imageArray = Object.values(document.getElementsByTagName('img'));
 imageArray = imageArray.filter(node => node.hasAttribute('data-src'));
@@ -182,7 +175,7 @@ function handleOnSignal(data) {
 // handles when peers are connected through P2P
 function handleOnConnect() {
   console.log('CONNECTED');
-  demoFunctions.reportTime(peersConnectedTime, currentTime, 'time_to_connect');
+  demoFunctions.reportTime(demoFunctions.currentTime, 'time_to_connect');
   // send ice candidates if exist
   if (candidates.length) {
     console.log(`Sending ${candidates.length} ice candidates.`);
@@ -226,17 +219,17 @@ function handleOnData(data) {
     let imageIndex = data.slice(12);
 
     // append time it took to receive image data
-    demoFunctions.appendTime(imageIndex, currentTime);
-    currentTime = new Date();
+    demoFunctions.appendTime(imageIndex, demoFunctions.currentTime);
+    demoFunctions.currentTime = new Date();
     setImage(imageData, imageArray, imageIndex);
     imageData = '';
     if (counter + extCounter === imageArray.length) {
       console.log('All assets downloaded!');
       assetsDownloaded = true;
       console.log('DESTROYING PEERS');
-      demoFunctions.reportTime(connectionDestroyedTime, currentTime, 'time_to_destroy');
-      demoFunctions.reportTime(connectionDestroyedTime, browserOpenTime, 'time_total');
-      currentTime = new Date();
+      demoFunctions.reportTime(demoFunctions.currentTime, 'time_to_destroy');
+      demoFunctions.reportTime(demoFunctions.browserOpenTime, 'time_total');
+      demoFunctions.currentTime = new Date();
       p.destroy();
       checkForImageError(imageArray);
       demoFunctions.assetsFromPeerMessage();
@@ -352,7 +345,7 @@ function loadAssetsFromServer() {
     setServerImage(imageSrc);
   }
   // report time it took to load assets from server
-  demoFunctions.timeTotalFromServer(browserOpenTime);
+  demoFunctions.timeTotalFromServer(demoFunctions.browserOpenTime);
 }
 
 function getImageData(image) {

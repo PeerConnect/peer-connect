@@ -1,4 +1,6 @@
 const demoFunctions = {
+  browserOpenTime: new Date(),
+  currentTime: new Date(),
   assetsFromServer: function () {
     document.getElementsByClassName('loading_gif')[0].style.display = 'none';
     document.getElementById('downloaded_from').innerHTML = 'Assets downloaded from the SERVER!';
@@ -30,9 +32,9 @@ const demoFunctions = {
   appendTime: function (imageIndex, currentTime) {
     document.getElementById(imageIndex).parentNode.appendChild(document.createTextNode(`${new Date() - currentTime} ms`));
   },
-  reportTime: function (time, currentOrTotal, domId) {
+  reportTime: function (currentOrTotal, domId) {
     // function that reports time to DOM
-    time = new Date();
+    const time = new Date();
     document.getElementById(domId).innerHTML += `<span class="bold">${time - currentOrTotal} ms</span>`;
     currentTime = new Date();
   },

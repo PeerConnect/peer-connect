@@ -31,12 +31,14 @@ const peerConfig = {
   // how many peers must be connected before loading assets from peers
   // if threshold = 3, fourth client will load from peers
   threshold: 1,
-  // asset types to load from peers
-  assetTypes: ['jpg', 'jpeg', 'png'],
+  // media types to share with peers
+  mediaTypes: ['image', 'video', 'audio'],
+  // asset file formats to exclude from peers
+  excludeFormats: ['gif'],
   // load images above the fold from server if foldLoading: true
-  foldLoading: true,
+  foldLoading: false,
   // toggle geolocation for pairing peers
-  geolocate: true
+  geolocate: true,
 };
 
 PeerConnect(peerConfig, server);

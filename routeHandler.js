@@ -9,7 +9,7 @@ module.exports = function (peerConfig, app) {
     }
 
     files.forEach(file => {
-      console.log(file);
+      // console.log(file);
       app.get(`/video/${file}`, (req, res) => {
         res.sendFile(path.join(__dirname, route, file));
       })

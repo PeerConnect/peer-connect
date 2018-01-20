@@ -2,6 +2,7 @@ const express = require("express");
 const path = require("path");
 const PeerConnect = require('./peerConnect.js');
 const routeHandler = require('./routeHandler.js');
+const videoConnect = require('./videoConnect.js');
 
 // App setup
 const PORT = process.env.PORT || 8080;
@@ -46,10 +47,17 @@ const peerConfig = {
   // toggle geolocation for pairing peers
   geolocate: true,
   // route for video assets
-  videoRoute: './assets/videos'
+  videoRoute: './assets/videos',
+  //where you want to create torrent files
+  torrentRoute: './assets',
+  //domain name
+  domainName: 'https://webseed.btorrent.xyz/',
 };
 
 routeHandler(peerConfig, app);
+
+    //begin videoConnect
+videoConnect(peerConfig, app);
 
 
 PeerConnect(peerConfig, server);

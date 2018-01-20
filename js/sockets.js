@@ -2,6 +2,9 @@
 /* eslint no-use-before-define: ["error", { "functions": false }] */
 
 const Peer = require('simple-peer');
+const parseTorrent = require('parse-torrent');
+const http = require('stream-http');
+const WebTorrent = require('webtorrent');
 
 const peerMethods = function (peer) {
   peer.on("error", err => {
@@ -143,6 +146,33 @@ socket.on('answer_to_initiator', (message, peerLocation) => {
     document.getElementById('peer_info').innerHTML +=
       `<br>* Sent data to ${peerLocation.city}, ${peerLocation.regionCode}, ${peerLocation.country} ${peerLocation.zipCode};`;
   }
+});
+
+socket.on('magnet_uri', () => {
+  http.get('/torrent', function (res) {
+    const data = [];
+  
+    res.on('data', function (chunk) {
+      data.push(chunk);
+      // console.log(data);
+    })
+  
+    res.on('end', function () {
+      let newData = Buffer.concat(data) // Make one large Buffer of it
+  
+      let torrentParsed = parseTorrent(newData) // Parse the Buffer
+      const client = new WebTorrent()
+  
+      client.add(torrentParsed, onTorrent)
+    });
+  
+    function onTorrent (torrent) {
+      console.log(torrent.wires.length);
+      torrent.files.forEach(function (file) {
+        file.renderTo('#video');
+      });
+    }
+  });
 });
 
 // handles all signals

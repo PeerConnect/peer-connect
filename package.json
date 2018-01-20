@@ -18,14 +18,17 @@
   },
   "homepage": "https://github.com/PeerConnect/peer-connect#readme",
   "dependencies": {
+    "create-torrent": "^3.29.2",
     "eslint-config-airbnb": "^16.1.0",
     "eslint-plugin-jsx-a11y": "^6.0.3",
     "eslint-plugin-react": "^7.5.1",
     "express": "^4.16.2",
     "node-fetch": "^1.7.3",
+    "parse-torrent": "^5.8.3",
     "path": "^0.12.7",
     "simple-peer": "^8.2.0",
     "socket.io": "^2.0.4",
+    "stream-http": "^2.8.0",
     "webtorrent": "^0.98.20",
     "wrtc": "0.0.65"
   },

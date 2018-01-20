@@ -2,6 +2,7 @@
 
 const socket = require('socket.io');
 const fetch = require('node-fetch');
+const videoConnect = require('./videoConnect.js');
 
 // all filetypes
 const fileTypes = {
@@ -35,6 +36,7 @@ function PeerConnect(config, server) {
     numClients: 0,
     numInitiators: 0,
   };
+  //set up for video
 
   // server socket
   this.io.on('connection', (client) => {
@@ -46,6 +48,8 @@ function PeerConnect(config, server) {
       offer: null,
       location: null,
     };
+
+    videoConnect(client);
 
     // creation of peers handled here
     if (this.config.geolocate) {

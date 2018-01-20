@@ -23,7 +23,7 @@ app.use((req, res, next) => {
 });
 
 app.get('/torrent', (req, res) => {
-  res.sendFile(path.resolve(__dirname, './tiger.torrent'));
+  res.sendFile(path.resolve(__dirname, './assets/torrent/video.torrent'));
 });
 
 

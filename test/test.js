@@ -1,7 +1,7 @@
-const socket = require('socket.io');
+const io = require('socket.io-client');
 const should = require('should');
 const peerConnect = require('../peerConnect.js');
-const socketURL = 'http://localhost:8080';
+const sockets = require('../js/sockets.js');
 
 // describe('Array', () => {
 //   describe('#indexOf()', () => {
@@ -10,6 +10,13 @@ const socketURL = 'http://localhost:8080';
 //     });
 //   });
 // });
+
+const socketURL = 'http://localhost:8080';
+
+const options = {
+  transports: ['websocket'],
+  'force new connection': true
+};
 
 const serverStats = {
   numClients: 0,
@@ -25,16 +32,11 @@ const user1 = {
 
 const activeClients = {};
 
-describe('Peer Connect', () => {
+describe('peerConnect()', () => {
   it('should create an active user when client connects', (done) => {
-    const client = socket();
+    const client = io.connect(socketURL, options);
 
-    client.emit('connect', user1);
-
-    client.on('connection', () => {
-      serverStats.numClients += 1;
-      activeClients[user1.id];
-    });
+    client.emit('offer_to_server', ({ offer: data }));
 
     serverStats.numClients.should.equal(1);
 

@@ -1,6 +1,8 @@
 const express = require("express");
 const path = require("path");
-const PeerConnect = require('./server/peerConnect.js');
+const PeerConnect = require('./peerConnect.js');
+const routeHandler = require('./routeHandler.js');
+const videoConnect = require('./videoConnect.js');
 
 // App setup
 const PORT = process.env.PORT || 8080;
@@ -10,6 +12,8 @@ const server = app.listen(PORT, () =>
 );
 
 // Serve static files
+// app.use('/media', express.static(path.join(__dirname, './assets/videos')));
+
 app.use(express.static(path.join(__dirname, "/")));
 
 // Allow for cross origin resource sharing
@@ -22,9 +26,11 @@ app.use((req, res, next) => {
   next();
 });
 
+
 app.get('/torrent', (req, res) => {
-  res.sendFile(path.resolve(__dirname, './assets/torrent/tiger.torrent'));
+  res.sendFile(path.join(__dirname, './assets/torrent/myVideos.torrent'));
 });
+
 
 
 // PeerConnect configuration
@@ -40,6 +46,18 @@ const peerConfig = {
   foldLoading: false,
   // toggle geolocation for pairing peers
   geolocate: true,
+  // route for video assets
+  videoRoute: './assets/videos',
+  //where you want to create torrent files
+  torrentRoute: './assets',
+  //domain name
+  domainName: 'https://webseed.btorrent.xyz/',
 };
+
+routeHandler(peerConfig, app);
+
+    //begin videoConnect
+videoConnect(peerConfig, app);
+
 
 PeerConnect(peerConfig, server);

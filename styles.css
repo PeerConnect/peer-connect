@@ -1,0 +1,65 @@
+@import url('https://fonts.googleapis.com/css?family=Open+Sans:900|Raleway:300,400');
+
+body {
+  background: url(/assets/circles-dark.png) repeat;
+  font-family: 'Open Sans', sans-serif;
+}
+
+.title {
+  margin-bottom: 20px;
+  font-size: 60px;
+  font-weight: 300;
+  font-family: 'Raleway', sans-serif;
+  text-align: center;
+  color: #9F2738;
+}
+
+.bold {
+  font-weight: 900;
+}
+
+.image-container-inner {
+  overflow: hidden;
+}
+
+img {
+  position: relative;
+  left: 50%;
+  height: 300px;
+  transform: translateX(-50%);
+}
+
+main {
+  text-align: center;
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+#image-container {
+  display: grid;
+  grid-template-columns: 300px 300px 300px;
+  grid-gap: 10px;
+  margin-top: 10px;
+}
+
+#video {
+  max-width: 500px;
+}
+
+.peer-connect-class {
+  height: 300px;
+  background: url(/assets/peerConnect.png);
+  border: 2px solid #9F2738;
+}
+
+.peerConnectCamelCase {
+  height: 300px;
+  background: url(/assets/peerConnect.png);
+  border: 2px solid #8F8F91;
+}
+
+#peer-connect-id {
+  height: 300px;
+  background-image: url(/assets/peerConnect.png);
+  border: 2px solid #749099;
+}

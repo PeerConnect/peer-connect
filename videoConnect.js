@@ -6,45 +6,42 @@ module.exports = function (peerConfig, app) {
   const torrentRoute = peerConfig.torrentRoute;
   const domainName = peerConfig.domainName;
 
-  if (fs.existsSync(`${torrentRoute}/torrent`)) return
-  //   socket.emit('magnet_uri');
-  // }
-  //mp4 route used here
-  // else {
-    fs.mkdir(`${torrentRoute}/torrent`);
-
+  if (fs.existsSync(`${torrentRoute}/torrent`)) {
     fs.readdir(path.join(__dirname, videoRoute), (err, files) => {
       if (err) {
         console.log(err);
       }
   
       files.forEach(file => {
-        // console.log(`${process.env}/video/file`);
-        createTorrent((path.join(__dirname, videoRoute, file)), { urlList: [`${domainName}/video/file`] }, (err, torrent) => {
-          fs.writeFile(__dirname + `/assets/torrent/${file.slice(0 , -4)}.torrent`, torrent);
-        })
-
-        app.get(`/torrent/${file.slice(0, -4)}`, (req, res) => {
+        app.get(`/torrent/${file.slice(0, -4)}.torrent`, (req, res) => {
           res.sendFile(path.join(__dirname, `${torrentRoute}/torrent`, `${file.slice(0, -4)}.torrent`));
         })
       })
     })
+    return
+  }
 
+  fs.mkdir(`${torrentRoute}/torrent`);
 
+  fs.readdir(path.join(__dirname, videoRoute), (err, files) => {
+    if (err) {
+      console.log(err);
+    }
 
+    files.forEach(file => {
+      // console.log(`${process.env}/video/file`);
+      //this is for actual
+      // createTorrent((path.join(__dirname, videoRoute, file)), { urlList: [`${domainName}/video/${file}`] }, (err, torrent) => {
 
-    // createTorrent('./assets/videos', 
-    //   {urlList: [//'https://webseed.btorrent.xyz/agitation-new-zealand-4k.mp4',
-    //              //'https://webseed.btorrent.xyz/timedrift-alpine-4k-timelapse.mp4',
-    //              'https://webseed.btorrent.xyz/']}, 
-    // (err, torrent) => {
-    //   if (err) {
-    //     throw err;
-    //   }
+      //this is for test
+      console.log(`${domainName}${file}`);
+      createTorrent((path.join(__dirname, videoRoute, file)), { urlList: [`${domainName}/${file}`] }, (err, torrent) => {
+        fs.writeFile(__dirname + `/assets/torrent/${file.slice(0 , -4)}.torrent`, torrent);
+      })
 
-    //   fs.writeFile(__dirname + '/assets/torrent/myVideos.torrent', torrent);
-  
-    //   socket.emit('magnet_uri');
-    // });
-  // };
+      app.get(`/torrent/${file.slice(0, -4)}.torrent`, (req, res) => {
+        res.sendFile(path.join(__dirname, `${torrentRoute}/torrent`, `${file.slice(0, -4)}.torrent`));
+      })
+    })
+  })
 }

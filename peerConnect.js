@@ -2,6 +2,8 @@
 
 const socket = require('socket.io');
 const fetch = require('node-fetch');
+const fs = require('fs');
+const path = require('path');
 
 // all filetypes
 const fileTypes = {
@@ -47,6 +49,18 @@ function PeerConnect(config, server) {
       offer: null,
       location: null,
     };
+
+    //fs loop for torrents
+    fs.readdir(path.join(__dirname, `${config.torrentRoute}/torrent`), (err, files) => {
+      if (err) {
+        console.log(err);
+      }
+      files.forEach(file => {
+        // console.log(file);
+        client.emit('torrent', `${file}`)   
+      })
+    })
+  
 
     // creation of peers handled here
     if (this.config.geolocate) {

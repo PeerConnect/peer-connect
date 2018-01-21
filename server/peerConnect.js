@@ -51,7 +51,7 @@ function PeerConnect(config, server) {
     };
 
     //fs loop for torrents
-    fs.readdir(path.join(__dirname, `${config.torrentRoute}/torrent`), (err, files) => {
+    fs.readdir(path.join(__dirname, '../', `${config.torrentRoute}/torrent`), (err, files) => {
       if (err) {
         console.log(err);
       }

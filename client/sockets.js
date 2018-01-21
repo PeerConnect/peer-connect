@@ -126,28 +126,28 @@ socket.on('answer_to_initiator', (message, peerLocation) => {
   demoFunctions.sentDataToPeerLocation(peerLocation);
 });
 
-socket.on('magnet_uri', () => {
-  http.get('/torrent', function (res) {
+socket.on('torrent', (torrent) => {
+  console.log('attempting to get torrent: ', torrent);
+  http.get(`/torrent/${torrent}`, function (res) { //needs to be automated 
     const data = [];
-
+  
     res.on('data', function (chunk) {
       data.push(chunk);
       // console.log(data);
     })
-
+  
     res.on('end', function () {
       let newData = Buffer.concat(data) // Make one large Buffer of it
-
       let torrentParsed = parseTorrent(newData) // Parse the Buffer
       const client = new WebTorrent()
-
+      console.log(torrentParsed);
       client.add(torrentParsed, onTorrent)
     });
-
-    function onTorrent(torrent) {
+  
+    function onTorrent (torrent) {
       console.log(torrent.wires.length);
       torrent.files.forEach(function (file) {
-        file.renderTo('#video');
+        file.appendTo('body'); //needs to be automated
       });
     }
   });

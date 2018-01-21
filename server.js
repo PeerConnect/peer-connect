@@ -1,8 +1,8 @@
 const express = require("express");
 const path = require("path");
-const PeerConnect = require('./peerConnect.js');
-const routeHandler = require('./routeHandler.js');
-const videoConnect = require('./videoConnect.js');
+const PeerConnect = require('./server/peerConnect.js');
+const routeHandler = require('./server/routeHandler.js');
+const videoConnect = require('./server/videoConnect.js');
 
 // App setup
 const PORT = process.env.PORT || 8080;

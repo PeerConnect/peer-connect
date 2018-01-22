@@ -51,7 +51,7 @@ const peerConfig = {
   //where you want to create torrent files
   torrentRoute: './assets',
   //domain name
-  domainName: 'https://webseed.btorrent.xyz/',
+  domainName: 'https://webseed.btorrent.xyz',
 };
 
 routeHandler(peerConfig, app);

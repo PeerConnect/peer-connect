@@ -134,20 +134,18 @@ socket.on('torrent', (torrent) => {
     res.on('data', function (chunk) {
       data.push(chunk);
       // console.log(data);
-    })
+    });
   
     res.on('end', function () {
       let newData = Buffer.concat(data) // Make one large Buffer of it
       let torrentParsed = parseTorrent(newData) // Parse the Buffer
       const client = new WebTorrent()
-      console.log(torrentParsed);
       client.add(torrentParsed, onTorrent)
     });
   
     function onTorrent (torrent) {
-      console.log(torrent.wires.length);
       torrent.files.forEach(function (file) {
-        file.appendTo('body'); //needs to be automated
+        file.renderTo(document.querySelector(`[data-src*='${file.name}']`)); //needs to be automated
       });
     }
   });

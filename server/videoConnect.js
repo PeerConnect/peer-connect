@@ -35,7 +35,7 @@ module.exports = function (peerConfig, app) {
 
       //this is for test
       console.log(`${domainName}${file}`);
-      createTorrent((path.join(__dirname,'../', videoRoute, file)), { urlList: [`${domainName}/${file}`] }, (err, torrent) => {
+      createTorrent((path.join(__dirname,'../', videoRoute, file)), { urlList: [`${domainName}${file}`] }, (err, torrent) => {
         fs.writeFile(__dirname,'../' + `/assets/torrent/${file.slice(0 , -4)}.torrent`, torrent);
       })
 

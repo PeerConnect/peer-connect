@@ -47,9 +47,9 @@ let assetsDownloaded = false;
 let peerId = '';
 // candidates is an array of the ice candidates to send once p2p is established
 let candidates = [];
-
 // global variables for data parsing/transfer and fold image loading
 let imageData;
+let imageHeight;
 let counter = 0;
 let extCounter = 0;
 let otherCounter = 0;
@@ -126,28 +126,26 @@ socket.on('answer_to_initiator', (message, peerLocation) => {
   demoFunctions.sentDataToPeerLocation(peerLocation);
 });
 
-socket.on('magnet_uri', () => {
-  http.get('/torrent', function (res) {
+//torrent signal, start fetching torrent files
+socket.on('torrent', (torrent) => {
+  console.log('attempting to get torrent: ', torrent);
+  http.get(`/torrent/${torrent}`, function (res) {
     const data = [];
-
-    res.on('data', function (chunk) {
+  
+    res.on('data', function(chunk) {
       data.push(chunk);
-      // console.log(data);
-    })
-
-    res.on('end', function () {
-      let newData = Buffer.concat(data) // Make one large Buffer of it
-
-      let torrentParsed = parseTorrent(newData) // Parse the Buffer
-      const client = new WebTorrent()
-
-      client.add(torrentParsed, onTorrent)
     });
-
+  
+    res.on('end', function() {
+      let newData = Buffer.concat(data); // Make one large Buffer of it
+      let torrentParsed = parseTorrent(newData); // Parse the Buffer
+      const client = new WebTorrent();
+      client.add(torrentParsed, onTorrent);
+    });
+    //render video files to where it was specified on data-src
     function onTorrent(torrent) {
-      console.log(torrent.wires.length);
-      torrent.files.forEach(function (file) {
-        file.renderTo('#video');
+      torrent.files.forEach(function(file) {
+        file.renderTo(document.querySelector(`[data-src*='${file.name}']`));
       });
     }
   });
@@ -188,9 +186,7 @@ function handleOnConnect() {
   }
 }
 
-let imageHeight;
 // handles when data is being received
-
 function handleOnData(data) {
   const dataString = data.toString();
   if (dataString.slice(0, 1) === '[') {
@@ -208,15 +204,15 @@ function handleOnData(data) {
     return;
   }
 
-  if (dataString.slice(0, 7) === 'test123') {
+  if (dataString.slice(0, 11) === 'sentHeights') {
     setImageHeights(dataString, imageArray);
     return;
   }
 
   loopImage();
 
-  if (dataString.slice(0, 12) == "FINISHED-YUY") {
-    let imageIndex = data.slice(12);
+  if (dataString.slice(0, 16) == "finished-sending") {
+    let imageIndex = data.slice(16);
 
     // append time it took to receive image data
     demoFunctions.appendTime(imageIndex, demoFunctions.currentTime);
@@ -312,7 +308,7 @@ function sendImageHeights(imageArray, peer) {
   for (let f = 0; f < imageArray.length; f++) {
     imageHeights.push(imageArray[f].height);
   }
-  peer.send(`test123 ${JSON.stringify(imageHeights)}`);
+  peer.send(`sentHeights ${JSON.stringify(imageHeights)}`);
 }
 
 function getImageType(image) {
@@ -334,7 +330,7 @@ function sendImage(image, peer, imageIndex) {
     console.log(`File part ${f} sent.`);
   }
   console.log('File fully sent.');
-  peer.send(`FINISHED-YUY${imageIndex}`);
+  peer.send(`finished-sending${imageIndex}`);
 }
 
 // download assets from server

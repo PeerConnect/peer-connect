@@ -5,6 +5,23 @@ module.exports = function (peerConfig, app) {
   const videoRoute = peerConfig.videoRoute;
   const torrentRoute = peerConfig.torrentRoute;
   const domainName = peerConfig.domainName;
+
+  
+  fs.readdir(path.join(__dirname, '../', videoRoute), (err, files) => {
+    if (err) {
+      console.log(err);
+    }
+
+    //create routes for each mp4 file to serve as webseeds
+    files.forEach(file => {
+      // console.log(file);
+      app.get(`/video/${file}`, (req, res) => {
+        res.sendFile(path.join(__dirname, '../', route, file));
+      });
+    });
+  });
+
+
   //if torrent folder already exists, just create routes
   if (fs.existsSync(`${torrentRoute}/torrent`)) {
     fs.readdir(path.join(__dirname,'../', videoRoute), (err, files) => {

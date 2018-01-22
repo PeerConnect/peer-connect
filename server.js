@@ -54,8 +54,6 @@ const peerConfig = {
   domainName: 'https://webseed.btorrent.xyz',
 };
 
-routeHandler(peerConfig, app);
-
     //begin videoConnect
 videoConnect(peerConfig, app);
 

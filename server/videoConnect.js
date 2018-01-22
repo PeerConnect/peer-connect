@@ -28,6 +28,7 @@ module.exports = function (peerConfig, app) {
       if (err) {
         console.log(err);
       }
+
       //loop through video files and create torrent routes that send torrent files
       files.forEach(file => {
         app.get(`/torrent/${file.slice(0, -4)}.torrent`, (req, res) => {
@@ -37,6 +38,7 @@ module.exports = function (peerConfig, app) {
     });
     return
   }
+
   //make torrent directory
   fs.mkdir(`${torrentRoute}/torrent`);
 
@@ -51,14 +53,13 @@ module.exports = function (peerConfig, app) {
       // createTorrent((path.join(__dirname,'../', videoRoute, file)), { urlList: [`${domainName}/video/${file}`] }, (err, torrent) => {
 
       //this is for test
-      console.log(`${domainName}${file}`);
       createTorrent((path.join(__dirname,'../', videoRoute, file)), { urlList: [`${domainName}/${file}`] }, (err, torrent) => {
         fs.writeFile(__dirname,'../' + `/assets/torrent/${file.slice(0 , -4)}.torrent`, torrent);
-      })
+      });
       //create routes to serve torrent files according to name
       app.get(`/torrent/${file.slice(0, -4)}.torrent`, (req, res) => {
         res.sendFile(path.join(__dirname,'../', `${torrentRoute}/torrent`, `${file.slice(0, -4)}.torrent`));
-      })
-    })
-  })
+      });
+    });
+  });
 }

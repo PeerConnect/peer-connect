@@ -11,9 +11,6 @@ const server = app.listen(PORT, () =>
   console.log(`App listening on port ${PORT}...`)
 );
 
-// Serve static files
-// app.use('/media', express.static(path.join(__dirname, './assets/videos')));
-
 app.use(express.static(path.join(__dirname, "/")));
 
 // Allow for cross origin resource sharing

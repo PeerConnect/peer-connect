@@ -131,12 +131,12 @@ socket.on('torrent', (torrent) => {
   console.log('attempting to get torrent: ', torrent);
   http.get(`/torrent/${torrent}`, function (res) {
     const data = [];
-  
-    res.on('data', function(chunk) {
+
+    res.on('data', function (chunk) {
       data.push(chunk);
     });
-  
-    res.on('end', function() {
+
+    res.on('end', function () {
       let newData = Buffer.concat(data); // Make one large Buffer of it
       let torrentParsed = parseTorrent(newData); // Parse the Buffer
       const client = new WebTorrent();
@@ -144,7 +144,7 @@ socket.on('torrent', (torrent) => {
     });
     //render video files to where it was specified on data-src
     function onTorrent(torrent) {
-      torrent.files.forEach(function(file) {
+      torrent.files.forEach(function (file) {
         file.renderTo(document.querySelector(`[data-src*='${file.name}']`));
       });
     }

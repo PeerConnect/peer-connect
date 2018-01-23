@@ -269,13 +269,13 @@ function loopImage() {
     for (let i = 0; i < imageArray.length; i += 1) {
       const imageSource = imageArray[i].dataset.src;
       const extension = getImageType(imageArray[i]);
-      // console.log(`${isElementInViewport(imageArray[i])} is: from ${i}`);
+      console.log(`${isElementInViewport(imageArray[i])} is: from ${i}`);
       // const foldLoading = configuration.foldLoading ? isElementInViewport(imageArray[i]) : false;
       if (!configuration.assetTypes.includes(extension)) {
         extCounter += 1;
         setServerAsset(imageSource);
       }
-      if (configuration.foldLoading && isElemengInViewport(imageArray[i])) {
+      if (configuration.foldLoading && isElementInViewport(imageArray[i])) {
         setServerAsset(imageSource);
       }
     }
@@ -351,9 +351,9 @@ function sendImage(image, peer, imageIndex) {
     start = f * CHUNK_SIZE;
     end = (f + 1) * CHUNK_SIZE;
     peer.send(data.slice(start, end));
-    console.log(`File part ${f} sent.`);
+    // console.log(`File part ${f} sent.`);
   }
-  console.log('File fully sent.');
+  // console.log('File fully sent.');
   peer.send(`finished-sending${imageIndex}`);
 }
 

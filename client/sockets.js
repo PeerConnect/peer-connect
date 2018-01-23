@@ -8,7 +8,7 @@ const WebTorrent = require('webtorrent');
 
 const peerMethods = function (peer) {
   peer.on("error", err => {
-    // console.log(err)
+    console.log(err)
   });
 
   /* Signal is automatically called when a new peer is created with {initiator:true} parameter. This generates the offer object to be sent to the peer.
@@ -28,7 +28,7 @@ const peerMethods = function (peer) {
   })
 
   peer.on('close', function () {
-    // console.log('P2P closed')
+    console.log('P2P closed')
     assetsDownloaded ? createInitiator() : createInitiator('base')
   })
 };
@@ -85,7 +85,7 @@ socket.on('create_base_initiator', (assetTypes, foldLoading) => {
 // Create receiver peer; server determined that this peer can be a receiver and
 // sent a stored offer object from an avaliable initiator
 socket.on('create_receiver_peer', (initiatorData, assetTypes, foldLoading) => {
-  // console.log('creating receiver peer');
+  console.log('creating receiver peer');
   // checks if none of the asset types are to be sent through P2P
   // if none, load straight from server
   let P2PFlag = false;
@@ -117,7 +117,7 @@ socket.on('create_receiver_peer', (initiatorData, assetTypes, foldLoading) => {
 
 // answer object has arrived to the initiator. Connection will when the signal(message) is invoked.
 socket.on('answer_to_initiator', (message, peerLocation) => {
-  // console.log('answer_to_initiator');
+  console.log('answer_to_initiator');
   // this final signal where initiator receives the answer does not call
   // handleOnSignal/.on('signal'), it goes handleOnConnect.
   p.signal(message);
@@ -131,7 +131,7 @@ socket.on('magnet_uri', () => {
 
     res.on('data', function (chunk) {
       data.push(chunk);
-      // console.log(data);
+      console.log(data);
     })
 
     res.on('end', function () {
@@ -144,7 +144,7 @@ socket.on('magnet_uri', () => {
     });
 
     function onTorrent(torrent) {
-      // console.log(torrent.wires.length);
+      console.log(torrent.wires.length);
       torrent.files.forEach(function (file) {
         file.renderTo('#video');
       });
@@ -156,12 +156,12 @@ socket.on('magnet_uri', () => {
 function handleOnSignal(data) {
   // send offer object to server for server to store
   if (data.type === 'offer') {
-    // console.log('Emitting offer_to_server.');
+    console.log('Emitting offer_to_server.');
     socket.emit('offer_to_server', { offer: data });
   }
   // send answer object to server for server to send to avaliable initiator
   if (data.type === 'answer') {
-    // console.log('Emitting answer_to_server.');
+    console.log('Emitting answer_to_server.');
     socket.emit('answer_to_server', { answer: data, peerId });
   }
   // After the offer/answer object is generated, ice candidates are generated as
@@ -173,11 +173,11 @@ function handleOnSignal(data) {
 
 // handles when peers are connected through P2P
 function handleOnConnect() {
-  // console.log('CONNECTED');
+  console.log('CONNECTED');
   demoFunctions.reportTime(demoFunctions.currentTime, 'time_to_connect');
   // send ice candidates if exist
   if (candidates.length) {
-    // console.log(`Sending ${candidates.length} ice candidates.`);
+    console.log(`Sending ${candidates.length} ice candidates.`);
     p.send(JSON.stringify(candidates));
     candidates = [];
   }
@@ -195,10 +195,10 @@ function handleOnData(data) {
   if (dataString.slice(0, 1) === '[') {
     const receivedCandidates = JSON.parse(data);
     receivedCandidates.forEach((ele) => {
-      // console.log('got candidate');
+      console.log('got candidate');
       p.signal(ele);
     });
-    // console.log('Received all ice candidates.');
+    console.log('Received all ice candidates.');
     // // send assets if initiator
     // // uncomment this if receiver trickle on
     // if (assetsDownloaded) {
@@ -223,9 +223,9 @@ function handleOnData(data) {
     setImage(imageData, imageArray, imageIndex);
     imageData = '';
     if (counter + extCounter === imageArray.length) {
-      // console.log('All assets downloaded!');
+      console.log('All assets downloaded!');
       assetsDownloaded = true;
-      // console.log('DESTROYING PEERS');
+      console.log('DESTROYING PEERS');
       demoFunctions.reportTime(demoFunctions.currentTime, 'time_to_destroy');
       demoFunctions.reportTime(demoFunctions.browserOpenTime, 'time_total');
       demoFunctions.currentTime = new Date();
@@ -244,7 +244,7 @@ function loopImage() {
     for (let i = 0; i < imageArray.length; i += 1) {
       const imageSource = imageArray[i].dataset.src;
       const extension = getImageType(imageArray[i]);
-      // console.log(`${isElementInViewport(imageArray[i])} is: from ${i}`);
+      console.log(`${isElementInViewport(imageArray[i])} is: from ${i}`);
       // const foldLoading = configuration.foldLoading ? isElementInViewport(imageArray[i]) : false;
       if (!configuration.assetTypes.includes(extension)) {
         extCounter += 1;
@@ -260,7 +260,7 @@ function loopImage() {
 }
 
 function setImage(imageData, imageArray, index) {
-  // console.log('Received all data for an image. Setting image.');
+  console.log('Received all data for an image. Setting image.');
   counter += 1;
   if (!isElementInViewport(imageArray[index]) && configuration.foldLoading || !configuration.foldLoading) {
     if (imageData.slice(0, 9) === 'undefined') imageArray[index].src = imageData.slice(9);
@@ -271,7 +271,7 @@ function setImage(imageData, imageArray, index) {
 
 // preset images with sent heights
 function setImageHeights(dataString, imageArray) {
-  // console.log('setting image heights to elementinviewport!');
+  console.log('setting image heights to elementinviewport!');
   let imageArrayCopy = [];
   imageHeight = JSON.parse(dataString.slice(7));
   imageHeight.forEach((element, idx) => {
@@ -303,7 +303,7 @@ function sendAssetsToPeer(peer) {
     if (configuration.assetTypes.includes(imageType)) {
       sendImage(imageArray[i], peer, i);
     }
-    // console.log('File sent.');
+    console.log('File sent.');
   }
 }
 
@@ -331,15 +331,15 @@ function sendImage(image, peer, imageIndex) {
     start = f * CHUNK_SIZE;
     end = (f + 1) * CHUNK_SIZE;
     peer.send(data.slice(start, end));
-    // console.log(`File part ${f} sent.`);
+    console.log(`File part ${f} sent.`);
   }
-  // console.log('File fully sent.');
+  console.log('File fully sent.');
   peer.send(`FINISHED-YUY${imageIndex}`);
 }
 
 // download assets from server
 function loadAssetsFromServer() {
-  // console.log('LOAD ASSETS FROM SERVER');
+  console.log('LOAD ASSETS FROM SERVER');
   for (let i = 0; i < imageArray.length; i += 1) {
     const imageSrc = imageArray[i].dataset.src;
     setServerImage(imageSrc);
@@ -383,6 +383,12 @@ function setBackgroundImage(selector, bgProperty, dataUrl) {
   document.querySelector(selector).style = newProperty;
 }
 
+/*
+ * generates data url for images to be sent to peers
+ * @param {object || string} image - dom element || background asset
+ * @param {string} seleector - selector to receive data background image
+ * @param {string} bgProperty - original background style defined in stylesheet
+*/
 function getImageData(image, selector, bgProperty) {
   let canvas = document.createElement('canvas');
   let context = canvas.getContext('2d');

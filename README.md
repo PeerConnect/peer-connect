@@ -28,7 +28,7 @@ If you just want to test the module without bundling, it is currently being host
 https://unpkg.com/peerconnect.js@1.0.11/client/dist/sockets.min.js
 ```
 #### Server
-PeerConnect utilizes Express and socket.io to coordinate WebRTC connections as well as torrenting viedeos.
+PeerConnect utilizes Express and socket.io to coordinate WebRTC connections. In addition, in order to create webseeds, we create routes serving the video files.
 
 To use it, require peerConnect from our package and pass in the Node Server instance you're using along with your PeerConnect configurations. In Express, you can get this instance by calling app.listen.
 

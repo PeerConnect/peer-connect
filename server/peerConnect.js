@@ -47,7 +47,7 @@ function PeerConnect(config, server) {
   // server socket
   this.io.on('connection', (client) => {
     console.log(`socket connection started. ID: ${client.id}`);
-    // console.log('imageHeights is: ', this.serverStats.imageHeights);
+    console.log('imageHeights is: ', this.serverStats.imageHeights);
     this.serverStats.numClients += 1;
     this.activeClients[client.id] = {
       id: client.id,
@@ -151,7 +151,7 @@ function PeerConnect(config, server) {
 
 // create initiators after ip geolocation api call
 function createBaseInitiator(client, config) {
-  client.emit('create_base_initiator', config.assetTypes, config.foldLoading, this.serverStats);
+  client.emit('create_base_initiator', config.assetTypes, config.foldLoading, this.serverStats.hasHeights);
 }
 function createReceiver(client, activeClients, config, serverStats) {
   this.serverStats = serverStats;
@@ -194,7 +194,7 @@ function createReceiver(client, activeClients, config, serverStats) {
     // Updates this.numInitiators and emit to receiver and send initiator data
     this.serverStats.numInitiators -= 1;
     console.log(config.assetTypes);
-    client.emit('create_receiver_peer', initiatorData, config.assetTypes, config.foldLoading);
+    client.emit('create_receiver_peer', initiatorData, config.assetTypes, config.foldLoading, this.serverStats.imageHeights);
   } else {
     // loops through activeClients and randomly finds avaliable initiator
     const initiatorsArr = [];

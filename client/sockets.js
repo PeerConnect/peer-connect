@@ -133,12 +133,7 @@ socket.on('torrent', (torrent) => {
 
     res.on('data', function (chunk) {
       data.push(chunk);
-<<<<<<< HEAD
-      console.log(data);
-    })
-=======
     });
->>>>>>> master
 
     res.on('end', function () {
       let newData = Buffer.concat(data); // Make one large Buffer of it

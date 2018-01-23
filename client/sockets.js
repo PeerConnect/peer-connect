@@ -60,6 +60,10 @@ imageArray = imageArray.filter(node => node.hasAttribute('data-src'));
 // assign ids to image
 imageArray.forEach((image, index) => image.setAttribute('id', index));
 
+//get video tag nodes
+let videoArray = Object.values(document.getElementsByTagName('video'));
+videoArray = videoArray.filter(node => node.hasAttribute('data-src'));
+
 // checks if broswer is opened from mobile
 const isMobile = checkForMobile();
 const browserSupport = !!RTCPeerConnection;
@@ -80,6 +84,10 @@ socket.on('create_base_initiator', (assetTypes, foldLoading) => {
   // download assets from server, create initiator peer
   // tell server assets were downloaded and send answer object to server
   // (this happens when new peer is created with initiator key true)
+  if (assetTypes.length === 0) {
+    loadAssetsFromServer();
+    return
+  }
   createInitiator(true);
 });
 // Create receiver peer; server determined that this peer can be a receiver and
@@ -147,6 +155,14 @@ socket.on('torrent', (torrent) => {
         file.renderTo(document.querySelector(`[data-src*='${file.name}']`));
       });
     }
+  });
+});
+
+socket.on('load_server_video', () => {
+  console.log('downloading videos from server');
+  videoArray.forEach(element => {
+    let source = element.dataset.src;
+    setServerAsset(source);
   });
 });
 
@@ -244,10 +260,10 @@ function loopImage() {
       // const foldLoading = configuration.foldLoading ? isElementInViewport(imageArray[i]) : false;
       if (!configuration.assetTypes.includes(extension)) {
         extCounter += 1;
-        setServerImage(imageSource);
+        setServerAsset(imageSource);
       }
       if (configuration.foldLoading) {
-        setServerImage(imageSource);
+        setServerAsset(imageSource);
       }
     }
     otherCounter += 1;
@@ -338,7 +354,7 @@ function loadAssetsFromServer() {
   console.log('LOAD ASSETS FROM SERVER');
   for (let i = 0; i < imageArray.length; i += 1) {
     const imageSrc = imageArray[i].dataset.src;
-    setServerImage(imageSrc);
+    setServerAsset(imageSrc);
   }
   // report time it took to load assets from server
   demoFunctions.timeTotalFromServer(demoFunctions.browserOpenTime);
@@ -418,11 +434,11 @@ function checkForImageError(imageArray) {
   for (let i = 0; i < imageArray.length; i++) {
     let source = imageArray[i].dataset.src;
     imageArray[i].error = function () {
-      setServerImage(source);
+      setServerAsset(source);
     }
   }
 }
 
-function setServerImage(imageSource) {
+function setServerAsset(imageSource) {
   document.querySelector(`[data-src='${imageSource}']`).setAttribute('src', `${imageSource}`);
 }

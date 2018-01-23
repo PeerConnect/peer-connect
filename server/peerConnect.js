@@ -6,28 +6,31 @@ const fs = require('fs');
 const path = require('path');
 
 // all filetypes
-const fileTypes = {
-  image: ['jpeg', 'jpg', 'png', 'gif'],
-  video: ['mp4', 'avi', 'flv', 'wmv', 'mov'],
-  audio: ['mp3', 'wma', 'wav'],
-};
+
+const imageTypes = ['jpeg', 'jpg', 'png', 'gif'];
+
 
 function PeerConnect(config, server) {
   // DEFAULT CONFIGURABLES
   this.config = { ...config }; // eslint rules: parameters should be immutable
   this.config.threshold = this.config.threshold || 1;
   this.config.foldloading = this.config.foldLoading !== false; // default true
-  this.config.geolocate = this.config.geolocate; // defaults to undefined
+  this.config.geolocate = this.config.geolocate !== false; // defaults to true
+  this.config.peerVideos = this.config.peerVideos !== false; //defaults to true
+  this.config.peerImages = this.config.peerImages !== false; //defaults to true  
 
   // REFERENCED CONFIGURABLES
   // include the inputted media types
   // filter out the excluded assetTypes after lowercasing excludeFormats
   this.config.excludeFormats = lowerCaseConfig(this.config.excludeFormats);
-  this.config.mediaTypes = lowerCaseConfig(this.config.mediaTypes);
-  const assetTypes = declareAssetTypes(this.config.mediaTypes, fileTypes);
-  this.config.assetTypes = assetTypes.filter(type => !this.config.excludeFormats.includes(type));
 
-  // NON-CONFIGURABLES
+  if (!this.config.peerImages) {
+    this.config.assetTypes = [];
+  } else {
+    this.config.assetTypes = imageTypes.filter(type => !this.config.excludeFormats.includes(type));
+  }
+
+  // NON-CONFIGURABLES 
   // Sockets setup
   this.io = socket(server);
   // Store list of all clients actively using app
@@ -51,19 +54,23 @@ function PeerConnect(config, server) {
     };
 
     //fs loop for torrents
-    fs.readdir(path.join(__dirname, '../', `${config.torrentRoute}/torrent`), (err, files) => {
-      if (err) {
-        console.log(err);
-      }
-      files.forEach(file => {
-        // console.log(file);
-        client.emit('torrent', `${file}`)   
-      })
-    })
+    if (this.config.peerVideos) {
+      fs.readdir(path.join(__dirname, '../', `${config.torrentRoute}/torrent`), (err, files) => {
+        if (err) {
+          console.log(err);
+        }
+        files.forEach(file => {
+          // console.log(file);
+          client.emit('torrent', `${file}`)   
+        });
+      });
+    } else {
+      client.emit('load_server_video');
+    }
   
 
     // creation of peers handled here
-    if (this.config.geolocate) {
+    if (this.config.geolocate && this.config.peerImages) {
       // cip is the client's ip address
       // if localhost use static ip
       this.staticIP = '45.59.229.42';
@@ -98,10 +105,10 @@ function PeerConnect(config, server) {
         });
     } else {
       // if geolocate is off
-      if (this.serverStats.numInitiators < this.config.threshold) {
+      if (this.serverStats.numInitiators < this.config.threshold || !this.config.peerImages) {
         createBaseInitiator(client, this.config);
       }
-      if (this.serverStats.numInitiators >= this.config.threshold) {
+      else if (this.serverStats.numInitiators >= this.config.threshold) {
         createReceiver(client, this.activeClients, this.config, this.serverStats);
       }
     }
@@ -179,6 +186,7 @@ function createReceiver(client, activeClients, config, serverStats) {
     this.activeClients[closestPeer.id].initiator = false;
     // Updates this.numInitiators and emit to receiver and send initiator data
     this.serverStats.numInitiators -= 1;
+    console.log(config.assetTypes);
     client.emit('create_receiver_peer', initiatorData, config.assetTypes, config.foldLoading);
   } else {
     // loops through activeClients and randomly finds avaliable initiator
@@ -194,6 +202,7 @@ function createReceiver(client, activeClients, config, serverStats) {
     this.activeClients[selectedInitiatorId].initiator = false;
     // Updates this.numInitiators and emit to receiver and send initiator data
     this.serverStats.numInitiators -= 1;
+    console.log(config.assetTypes);
     client.emit('create_receiver_peer', initiatorData, config.assetTypes, config.foldLoading);
   }
 }

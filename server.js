@@ -1,7 +1,6 @@
 const express = require("express");
 const path = require("path");
 const PeerConnect = require('./server/peerConnect.js');
-const routeHandler = require('./server/routeHandler.js');
 const videoConnect = require('./server/videoConnect.js');
 
 // App setup
@@ -22,13 +21,6 @@ app.use((req, res, next) => {
   );
   next();
 });
-
-
-app.get('/torrent', (req, res) => {
-  res.sendFile(path.join(__dirname, './assets/torrent/myVideos.torrent'));
-});
-
-
 
 // PeerConnect configuration
 const peerConfig = {

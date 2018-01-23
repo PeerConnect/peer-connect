@@ -1,21 +1,65 @@
-module.exports = function (socket) {
+module.exports = function (peerConfig, app) {
   const createTorrent = require('create-torrent');
-  const parseTorrent = require('parse-torrent');
   const fs = require('fs');
-  const videoRoute = './assets/torrent';
+  const path = require('path');
+  const videoRoute = peerConfig.videoRoute;
+  const torrentRoute = peerConfig.torrentRoute;
+  const domainName = peerConfig.domainName;
 
-  if (fs.existsSync(videoRoute)) {
-    socket.emit('magnet_uri');
+  
+  fs.readdir(path.join(__dirname, '../', videoRoute), (err, files) => {
+    if (err) {
+      console.log(err);
+    }
+
+    //create routes for each mp4 file to serve as webseeds
+    files.forEach(file => {
+      // console.log(file);
+      app.get(`/video/${file}`, (req, res) => {
+        res.sendFile(path.join(__dirname, '../', route, file));
+      });
+    });
+  });
+
+
+  //if torrent folder already exists, just create routes
+  if (fs.existsSync(`${torrentRoute}/torrent`)) {
+    fs.readdir(path.join(__dirname,'../', videoRoute), (err, files) => {
+      if (err) {
+        console.log(err);
+      }
+
+      //loop through video files and create torrent routes that send torrent files
+      files.forEach(file => {
+        app.get(`/torrent/${file.slice(0, -4)}.torrent`, (req, res) => {
+          res.sendFile(path.join(__dirname,'../', `${torrentRoute}/torrent`, `${file.slice(0, -4)}.torrent`));
+        });
+      });
+    });
+    return
   }
 
-  else {
-    createTorrent(videoRoute, {urlList: ['https://webseed.btorrent.xyz/timedrift-alpine-4k-timelapse.mp4']}, (err, torrent) => {
-      if (err) {
-        throw err;
-      }
-      fs.writeFile('myVideo.torrent', torrent);
-  
-      socket.emit('magnet_uri');
+  //make torrent directory
+  fs.mkdir(`${torrentRoute}/torrent`);
+
+  fs.readdir(path.join(__dirname,'../', videoRoute), (err, files) => {
+    if (err) {
+      console.log(err);
+    }
+
+    files.forEach(file => {
+      //this is for actual
+      //create torrents with the mp4 links as webseed
+      // createTorrent((path.join(__dirname,'../', videoRoute, file)), { urlList: [`${domainName}/video/${file}`] }, (err, torrent) => {
+
+      //this is for test
+      createTorrent((path.join(__dirname,'../', videoRoute, file)), { urlList: [`${domainName}/${file}`] }, (err, torrent) => {
+        fs.writeFile(__dirname,'../' + `/assets/torrent/${file.slice(0 , -4)}.torrent`, torrent);
+      });
+      //create routes to serve torrent files according to name
+      app.get(`/torrent/${file.slice(0, -4)}.torrent`, (req, res) => {
+        res.sendFile(path.join(__dirname,'../', `${torrentRoute}/torrent`, `${file.slice(0, -4)}.torrent`));
+      });
     });
-  };
+  });
 }

@@ -29,6 +29,10 @@ const peerConfig = {
   threshold: 1,
   // media types to share with peers
   mediaTypes: ['image', 'video', 'audio'],
+  //load images p2p
+  peerImages: true,
+  //load videos p2p
+  peerVideos: false,
   // asset file formats to exclude from peers
   excludeFormats: ['gif'],
   // load images above the fold from server if foldLoading: true

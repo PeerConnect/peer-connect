@@ -17,7 +17,8 @@ function PeerConnect(config, server) {
   this.config = { ...config }; // eslint rules: parameters should be immutable
   this.config.threshold = this.config.threshold || 1;
   this.config.foldloading = this.config.foldLoading !== false; // default true
-  this.config.geolocate = this.config.geolocate; // defaults to undefined
+  this.config.geolocate = this.config.geolocate !== false; // defaults to true
+  this.config.peerVideos = this.config.peerVideos !== false; //defaults to true
 
   // REFERENCED CONFIGURABLES
   // include the inputted media types
@@ -51,15 +52,19 @@ function PeerConnect(config, server) {
     };
 
     //fs loop for torrents
-    fs.readdir(path.join(__dirname, '../', `${config.torrentRoute}/torrent`), (err, files) => {
-      if (err) {
-        console.log(err);
-      }
-      files.forEach(file => {
-        // console.log(file);
-        client.emit('torrent', `${file}`)   
-      })
-    })
+    if (this.config.peerVideos) {
+      fs.readdir(path.join(__dirname, '../', `${config.torrentRoute}/torrent`), (err, files) => {
+        if (err) {
+          console.log(err);
+        }
+        files.forEach(file => {
+          // console.log(file);
+          client.emit('torrent', `${file}`)   
+        });
+      });
+    } else {
+      client.emit('load_server_video');
+    }
   
 
     // creation of peers handled here

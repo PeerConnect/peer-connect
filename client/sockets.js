@@ -285,7 +285,7 @@ function setImage(imageData, imageArray, index) {
 function setImageHeights(dataString, imageArray) {
   console.log('setting image heights to elementinviewport!');
   let imageArrayCopy = [];
-  imageHeight = JSON.parse(dataString.slice(7));
+  imageHeight = JSON.parse(dataString.slice(11));
   imageHeight.forEach((element, idx) => {
     imageArray[idx].style.height = `${element}px`;
   });

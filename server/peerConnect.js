@@ -6,11 +6,9 @@ const fs = require('fs');
 const path = require('path');
 
 // all filetypes
-const fileTypes = {
-  image: ['jpeg', 'jpg', 'png', 'gif'],
-  video: ['mp4', 'avi', 'flv', 'wmv', 'mov'],
-  audio: ['mp3', 'wma', 'wav'],
-};
+
+const imageTypes = ['jpeg', 'jpg', 'png', 'gif'];
+
 
 function PeerConnect(config, server) {
   // DEFAULT CONFIGURABLES
@@ -19,16 +17,20 @@ function PeerConnect(config, server) {
   this.config.foldloading = this.config.foldLoading !== false; // default true
   this.config.geolocate = this.config.geolocate !== false; // defaults to true
   this.config.peerVideos = this.config.peerVideos !== false; //defaults to true
+  this.config.peerImages = this.config.peerImages !== false; //defaults to true  
 
   // REFERENCED CONFIGURABLES
   // include the inputted media types
   // filter out the excluded assetTypes after lowercasing excludeFormats
   this.config.excludeFormats = lowerCaseConfig(this.config.excludeFormats);
-  this.config.mediaTypes = lowerCaseConfig(this.config.mediaTypes);
-  const assetTypes = declareAssetTypes(this.config.mediaTypes, fileTypes);
-  this.config.assetTypes = assetTypes.filter(type => !this.config.excludeFormats.includes(type));
 
-  // NON-CONFIGURABLES
+  if (!this.config.peerImages) {
+    this.config.assetTypes = [];
+  } else {
+    this.config.assetTypes = imageTypes.filter(type => !this.config.excludeFormats.includes(type));
+  }
+
+  // NON-CONFIGURABLES 
   // Sockets setup
   this.io = socket(server);
   // Store list of all clients actively using app
@@ -184,6 +186,7 @@ function createReceiver(client, activeClients, config, serverStats) {
     this.activeClients[closestPeer.id].initiator = false;
     // Updates this.numInitiators and emit to receiver and send initiator data
     this.serverStats.numInitiators -= 1;
+    console.log(config.assetTypes);
     client.emit('create_receiver_peer', initiatorData, config.assetTypes, config.foldLoading);
   } else {
     // loops through activeClients and randomly finds avaliable initiator
@@ -199,6 +202,7 @@ function createReceiver(client, activeClients, config, serverStats) {
     this.activeClients[selectedInitiatorId].initiator = false;
     // Updates this.numInitiators and emit to receiver and send initiator data
     this.serverStats.numInitiators -= 1;
+    console.log(config.assetTypes);
     client.emit('create_receiver_peer', initiatorData, config.assetTypes, config.foldLoading);
   }
 }

@@ -30,7 +30,7 @@ const peerConfig = {
   // media types to share with peers
   mediaTypes: ['image', 'video', 'audio'],
   //load images p2p
-  peerImages: true,
+  peerImages: false,
   //load videos p2p
   peerVideos: false,
   // asset file formats to exclude from peers

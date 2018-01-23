@@ -16,6 +16,7 @@ PeerConnect is a proof of concept that aims to serve static assets (videos/image
 ### Video
 `PeerConnect` uses WebTorrent and torrenting protocols for video P2P transfers. By utilizing the server as a webseed for videos, as more and more individuals visit the site, video streams will get progressively stronger and rely less on the initial webseed hosted on the server.
 ## Usage
+Using PeerConnect requires a script on the client end and initiation on the server.
 ### Setup
 #### Client
 If using a file bundler e.g. (browserify), you can require it in.

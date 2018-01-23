@@ -16,14 +16,34 @@ PeerConnect is a proof of concept that aims to serve static assets (videos/image
 ### Video
 `PeerConnect` uses WebTorrent and torrenting protocols for video P2P transfers. By utilizing the server as a webseed for videos, as more and more individuals visit the site, video streams will get progressively stronger and rely less on the initial webseed hosted on the server.
 ## Usage
+Using PeerConnect requires a script on the client end and initiation on the server.
 ### Setup
 #### Client
+If using a file bundler e.g. (browserify), you can require it in.
+```js
+const peerConnect = require('peer-connect');
+```
+If you just want to test the module without bundling, it is currently being hosted on unpkg CDN. Use it as a script in your html file.
+```
+https://unpkg.com/peerconnect.js@1.0.11/client/dist/sockets.min.js
+```
 #### Server
+PeerConnect utilizes Express and socket.io to coordinate WebRTC connections as well as torrenting viedeos.
+
+To use it, require peerConnect from our package and pass in the Node Server instance you're using along with your PeerConnect configurations. In Express, you can get this instance by calling app.listen.
+
+Here's how you would use it in your server:
+```js
+const PeerConnect = require('peer-connect');
+const server = app.listen(8000);
+PeerConnect(peerConfig, server);
+```
 ### Configuration
 It's easy to incorporate `PeerConnect`. Just provide us with a few details on your P2P configuration and we'll do the rest!
 
 ```threshold``` - An integer threshold value to determine when to turn on P2P image sharing <i>e.g. if threshold = 3, fourth client will load from peers</i>
-<br>```mediaTypes``` - An array of the string(s) that tell which media types to share with peers
+<br>```peerImages``` - A boolean that determines whether to load images P2P
+<br>```peerVideos``` - A boolean that determines whether to load videos P2P
 <br>```excludeFormats``` - An array of string(s) that say which file formats to exclude from peers
 <br>```foldLoading``` - A boolean that determines whether to load images above the fold from the server if true
 <br>```geoLocate``` - A boolean that either uses geolocation to pair the closest peers or not
@@ -33,7 +53,8 @@ It's easy to incorporate `PeerConnect`. Just provide us with a few details on yo
 ```
 {
   threshold: Integer             // 3
-  mediaTypes: [Strings]          // ['image', 'video', 'audio']
+  peerImages: Boolean            // true
+  peerVideos: Boolean            // true
   excludeFormats: [Strings]      // ['gif']
   foldLoading: Boolean           // false
   geoLocate: Boolean             // true

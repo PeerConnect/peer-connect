@@ -70,7 +70,7 @@ function PeerConnect(config, server) {
   
 
     // creation of peers handled here
-    if (this.config.geolocate) {
+    if (this.config.geolocate && this.config.peerImages) {
       // cip is the client's ip address
       // if localhost use static ip
       this.staticIP = '45.59.229.42';
@@ -105,10 +105,10 @@ function PeerConnect(config, server) {
         });
     } else {
       // if geolocate is off
-      if (this.serverStats.numInitiators < this.config.threshold) {
+      if (this.serverStats.numInitiators < this.config.threshold || !this.config.peerImages) {
         createBaseInitiator(client, this.config);
       }
-      if (this.serverStats.numInitiators >= this.config.threshold) {
+      else if (this.serverStats.numInitiators >= this.config.threshold) {
         createReceiver(client, this.activeClients, this.config, this.serverStats);
       }
     }

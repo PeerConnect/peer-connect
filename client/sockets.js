@@ -84,6 +84,10 @@ socket.on('create_base_initiator', (assetTypes, foldLoading) => {
   // download assets from server, create initiator peer
   // tell server assets were downloaded and send answer object to server
   // (this happens when new peer is created with initiator key true)
+  if (assetTypes.length === 0) {
+    loadAssetsFromServer();
+    return
+  }
   createInitiator(true);
 });
 // Create receiver peer; server determined that this peer can be a receiver and

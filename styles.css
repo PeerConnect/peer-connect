@@ -57,9 +57,3 @@ main {
   background: url(/assets/peerConnect.png);
   border: 2px solid #8F8F91;
 }
-
-#peer-connect-id {
-  height: 300px;
-  background-image: url(/assets/peerConnect.png);
-  border: 2px solid #749099;
-}

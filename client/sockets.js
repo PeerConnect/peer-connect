@@ -60,27 +60,6 @@ imageArray = imageArray.filter(node => node.hasAttribute('data-src'));
 // assign ids to image
 imageArray.forEach((image, index) => image.setAttribute('id', index));
 
-function getStyleDefinitions() {
-  const sheets = document.styleSheets;
-  for (const i in sheets) {
-    const rules = sheets[i].rules || sheets[i].cssRules;
-    for (const r in rules) {
-      if (rules[r].selectorText) {
-        if (rules[r].cssText.includes('background:') || rules[r].cssText.includes('background-image:')) {
-          const styleString = rules[r].cssText;
-          const selector = styleString.substring(0, styleString.indexOf(' '));
-          const regex = /background\s*(.*?)\s*;/g;
-          const bgProperty = regex.exec(styleString)[0];
-          console.log(`selector: ${selector} -- bgProperty: ${bgProperty}`);
-          document.querySelector(selector).style = bgProperty;
-        }
-      }
-    }
-  }
-}
-
-getStyleDefinitions();
-
 // checks if broswer is opened from mobile
 const isMobile = checkForMobile();
 const browserSupport = !!RTCPeerConnection;
@@ -298,6 +277,7 @@ function setImageHeights(dataString, imageArray) {
   imageHeight.forEach((element, idx) => {
     imageArray[idx].style.height = `${element}px`;
   });
+  getBackgroundImages();
 }
 
 // Creates an initiator (therefore emitting a signal that creates an offer). The base parameter determines if initiator should download assets from server (example: there are no other initiators connected or client's peer got disconnected).
@@ -366,6 +346,42 @@ function loadAssetsFromServer() {
   }
   // report time it took to load assets from server
   demoFunctions.timeTotalFromServer(demoFunctions.browserOpenTime);
+}
+
+function getBackgroundImages() {
+  const sheets = document.styleSheets;
+  for (const i in sheets) {
+    const rules = sheets[i].rules || sheets[i].cssRules;
+    for (const r in rules) {
+      if (rules[r].selectorText) {
+        if (rules[r].cssText.includes('background:') || rules[r].cssText.includes('background-image:')) {
+          const styleString = rules[r].cssText;
+          const selector = styleString.substring(0, styleString.indexOf(' '));
+          const propertyRegex = /background\s*(.*?)\s*;/g;
+          const bgProperty = propertyRegex.exec(styleString)[0];
+          const imgSrc = bgProperty.substring(bgProperty.indexOf('"') + 1, bgProperty.lastIndexOf('"'));
+          getBackgroundImageData(imgSrc, selector, bgProperty);
+        }
+      }
+    }
+  }
+}
+
+function getBackgroundImageData(imgSrc, selector, bgProperty) {
+  let canvas = document.createElement('canvas');
+  let context = canvas.getContext('2d');
+  let img = new Image();
+  img.src = imgSrc;
+  context.canvas.width = img.width;
+  context.canvas.height = img.height;
+  context.drawImage(img, 0, 0, img.width, img.height);
+  const dataUrl = canvas.toDataURL();
+  setBackgroundImage(selector, bgProperty, dataUrl);
+}
+
+function setBackgroundImage(selector, bgProperty, dataUrl) {
+  const newProperty = bgProperty.substring(0, bgProperty.indexOf('"') + 1) + dataUrl + bgProperty.substring(bgProperty.lastIndexOf('"'), bgProperty.indexOf(';') + 1);
+  document.querySelector(selector).style = newProperty;
 }
 
 function getImageData(image) {

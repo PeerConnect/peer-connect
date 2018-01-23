@@ -6,7 +6,7 @@ module.exports = function (peerConfig, app) {
   const torrentRoute = peerConfig.torrentRoute;
   const domainName = peerConfig.domainName;
 
-  
+
   fs.readdir(path.join(__dirname, '../', videoRoute), (err, files) => {
     if (err) {
       console.log(err);

@@ -17,7 +17,7 @@ function PeerConnect(config, server) {
   this.config.foldloading = this.config.foldLoading !== false; // default true
   this.config.geolocate = this.config.geolocate !== false; // defaults to true
   this.config.peerVideos = this.config.peerVideos !== false; //defaults to true
-  this.config.peerImages = this.config.peerImages !== false; //defaults to true  
+  this.config.peerImages = this.config.peerImages !== false; //defaults to true
 
   // REFERENCED CONFIGURABLES
   // include the inputted media types
@@ -30,7 +30,7 @@ function PeerConnect(config, server) {
     this.config.assetTypes = imageTypes.filter(type => !this.config.excludeFormats.includes(type));
   }
 
-  // NON-CONFIGURABLES 
+  // NON-CONFIGURABLES
   // Sockets setup
   this.io = socket(server);
   // Store list of all clients actively using app
@@ -39,12 +39,15 @@ function PeerConnect(config, server) {
   this.serverStats = {
     numClients: 0,
     numInitiators: 0,
+    hasHeights: false,
+    imageHeights: [],
   };
   //set up for video
 
   // server socket
   this.io.on('connection', (client) => {
     console.log(`socket connection started. ID: ${client.id}`);
+    console.log('imageHeights is: ', this.serverStats.imageHeights);
     this.serverStats.numClients += 1;
     this.activeClients[client.id] = {
       id: client.id,
@@ -61,13 +64,13 @@ function PeerConnect(config, server) {
         }
         files.forEach(file => {
           // console.log(file);
-          client.emit('torrent', `${file}`)   
+          client.emit('torrent', `${file}`)
         });
       });
     } else {
       client.emit('load_server_video');
     }
-  
+
 
     // creation of peers handled here
     if (this.config.geolocate && this.config.peerImages) {
@@ -115,18 +118,22 @@ function PeerConnect(config, server) {
     // Initiator sent offer object to server.
     // Store offer object to the client's respective object inside this.activeClients.
     // Set this client to an initiator and update this.numInitiators count.
-    client.on('offer_to_server', (message) => {
+    client.on('offer_to_server', (message, imageHeights, hasHeights) => {
       this.serverStats.numInitiators += 1;
       this.activeClients[client.id].initiator = true;
       this.activeClients[client.id].offer = message.offer;
+      if (imageHeights && !this.serverStats.hasHeights) {
+        this.serverStats.imageHeights = imageHeights;
+        this.serverStats.hasHeights = hasHeights;
+      }
       console.log(`numClients, numInitiators: ${this.serverStats.numClients}, ${this.serverStats.numInitiators}`);
     });
 
     // Receiver sent answer object to server.
     // Send this answer object to the specific initiator that
     // provided the offer object to the receiver.
-    client.on('answer_to_server', (message) => {
-      client.to(message.peerId).emit('answer_to_initiator', message.answer, this.activeClients[client.id].location);
+    client.on('answer_to_server', (message, imageSliceIndex) => {
+      client.to(message.peerId).emit('answer_to_initiator', message.answer, this.activeClients[client.id].location, imageSliceIndex);
     });
     // if diconnected user was an initiator, update accordingly with this.numClients as well
     client.on('disconnect', () => {
@@ -144,7 +151,7 @@ function PeerConnect(config, server) {
 
 // create initiators after ip geolocation api call
 function createBaseInitiator(client, config) {
-  client.emit('create_base_initiator', config.assetTypes, config.foldLoading);
+  client.emit('create_base_initiator', config.assetTypes, config.foldLoading, this.serverStats.hasHeights);
 }
 function createReceiver(client, activeClients, config, serverStats) {
   this.serverStats = serverStats;
@@ -187,7 +194,7 @@ function createReceiver(client, activeClients, config, serverStats) {
     // Updates this.numInitiators and emit to receiver and send initiator data
     this.serverStats.numInitiators -= 1;
     console.log(config.assetTypes);
-    client.emit('create_receiver_peer', initiatorData, config.assetTypes, config.foldLoading);
+    client.emit('create_receiver_peer', initiatorData, config.assetTypes, config.foldLoading, this.serverStats.imageHeights);
   } else {
     // loops through activeClients and randomly finds avaliable initiator
     const initiatorsArr = [];

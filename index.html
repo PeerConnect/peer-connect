@@ -6,10 +6,10 @@
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>PeerConnect</title>
   <style>
-  @import url('https://fonts.googleapis.com/css?family=Open+Sans:900|Raleway:300,400');
+    @import url('https://fonts.googleapis.com/css?family=Open+Sans:900|Raleway:300,400');
 
     body {
-      background-color: #E5E2DE;
+      background: url(/assets/circles-dark.png) repeat;
       font-family: 'Open Sans', sans-serif;
     }
 
@@ -17,9 +17,9 @@
       margin-bottom: 20px;
       font-size: 60px;
       font-weight: 300;
-      font-family:'Raleway', sans-serif;
+      font-family: 'Raleway', sans-serif;
       text-align: center;
-      color:#9F2738;
+      color: #9F2738;
     }
 
     .bold {
@@ -45,6 +45,10 @@
       grid-gap: 10px;
       margin-top: 10px;
     }
+
+    #video {
+      max-width: 500px;
+    }
   </style>
 </head>
 
@@ -52,7 +56,7 @@
   <!-- <img id="title_frame" data-src"" src="https://png.pngtree.com/element_origin_min_pic/16/12/17/2e5c1508201c1133fc48c953885dfcda.jpg"/> -->
   <div class="title">PeerConnect</div>
   <main>
-    <img class="loading_gif" src="https://loading.io/spinners/pies/lg.pie-chart-loading-gif.gif" style="display:inline;"/>
+    <img class="loading_gif" src="https://loading.io/spinners/pies/lg.pie-chart-loading-gif.gif" style="display:inline;" />
     <div id="downloaded_from" style="display:none;">Assets downloaded from </div>
     </br>
     <div id="peer_info" style="display:none;">Peer Info: </div>
@@ -64,6 +68,8 @@
       </br>
       <div id="time_total">Total time: </div>
     </div>
+    <video data-src="../assets/videos/agitation-new-zealand-4k.mp4" controls id="video" src=""></video>
+    <video data-src="../assets/videos/yosemite-hd.mp4" controls id="video" src=""></video>
     <section id="image-container">
       <div class="bold">
         <img data-src="../assets/image1.jpg">
@@ -74,7 +80,6 @@
       <div class="bold">
         <img data-src="../assets/image3.jpg">
       </div>
-
       <div class="bold">
         <img data-src="../assets/image4.jpg">
       </div>
@@ -114,9 +119,8 @@
     </section>
   </main>
   <script src="/socket.io/socket.io.js"></script>
-  <script src="/js/simplepeer.min.js"></script>
-  <script src="/js/webrtc.js"></script>
-  <script src="/js/sockets.js"></script>
+  <script src="/demo.js"></script>
+  <script src="/client/bundle.js"></script>
 </body>
 
 </html>

@@ -13,12 +13,14 @@ module.exports = function (peerConfig, app) {
     }
 
     //create routes for each mp4 file to serve as webseeds
-    files.forEach(file => {
-      // console.log(file);
-      app.get(`/video/${file}`, (req, res) => {
-        res.sendFile(path.join(__dirname, '../', route, file));
+    if (files.length) {
+      files.forEach(file => {
+        // console.log(file);
+        app.get(`/video/${file}`, (req, res) => {
+          res.sendFile(path.join(__dirname, '../', route, file));
+        });
       });
-    });
+    }
   });
 
 

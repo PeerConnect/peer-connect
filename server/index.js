@@ -4,11 +4,12 @@ const socket = require('socket.io');
 const fetch = require('node-fetch');
 const fs = require('fs');
 const path = require('path');
+const appDir = path.dirname(require.main.filename);
+
 
 // all filetypes
 
 const imageTypes = ['jpeg', 'jpg', 'png', 'gif'];
-
 
 function PeerConnect(config, server) {
   // DEFAULT CONFIGURABLES
@@ -47,7 +48,6 @@ function PeerConnect(config, server) {
   // server socket
   this.io.on('connection', (client) => {
     console.log(`socket connection started. ID: ${client.id}`);
-    console.log('imageHeights is: ', this.serverStats.imageHeights);
     this.serverStats.numClients += 1;
     this.activeClients[client.id] = {
       id: client.id,
@@ -58,7 +58,7 @@ function PeerConnect(config, server) {
 
     //fs loop for torrents
     if (this.config.peerVideos) {
-      fs.readdir(path.join(__dirname, '../', `${config.torrentRoute}/torrent`), (err, files) => {
+      fs.readdir(appDir + `${config.torrentRoute.slice(1)}/torrent`, (err, files) => {
         if (err) {
           console.log(err);
         }
@@ -238,4 +238,74 @@ function lowerCaseConfig(arr) {
   return arr.map(str => str.toLowerCase());
 }
 
-module.exports = PeerConnect;
+function VideoConnect (peerConfig, app) {
+  const createTorrent = require('create-torrent');
+  const fs = require('fs');
+  const path = require('path');
+
+  const videoRoute = peerConfig.videoRoute;
+  const torrentRoute = peerConfig.torrentRoute;
+  const domainName = peerConfig.domainName;
+
+  fs.readdir(appDir + videoRoute.slice(1), (err, files) => {
+    if (err) {
+      console.log(err);
+    }
+
+    //create routes for each mp4 file to serve as webseeds
+    files.forEach(file => {
+      // console.log(file);
+      app.get(`/video/${file}`, (req, res) => {
+        res.sendFile(appDir + route.slice(1) + file);
+      });
+    });
+  });
+
+
+  //if torrent folder already exists, just create routes
+  if (fs.existsSync(`${torrentRoute}/torrent`)) {
+    fs.readdir(appDir + videoRoute.slice(1), (err, files) => {
+      if (err) {
+        console.log(err);
+      }
+
+      //loop through video files and create torrent routes that send torrent files
+      files.forEach(file => {
+        app.get(`/torrent/${file.slice(0, -4)}.torrent`, (req, res) => {
+          res.sendFile(appDir + `${torrentRoute.slice(1)}/torrent/` + `${file.slice(0, -4)}.torrent`);
+        });
+      });
+    });
+    return
+  }
+
+  //make torrent directory
+  fs.mkdir(`${torrentRoute}/torrent`);
+
+  fs.readdir(appDir + videoRoute.slice(1), (err, files) => {
+    if (err) {
+      console.log(err);
+    }
+
+    files.forEach(file => {
+      //this is for actual
+      //create torrents with the mp4 links as webseed
+      // createTorrent(appDir + videoRoute.slice(1) + '/' + file, { urlList: [`${domainName}/video/${file}`] }, (err, torrent) => {
+      //this is for test
+      createTorrent(appDir + videoRoute.slice(1) + '/' + file, { urlList: [`${domainName}/${file}`] }, (err, torrent) => {
+        fs.writeFile(appDir + `/assets/torrent/${file.slice(0 , -4)}.torrent`, torrent, (err) => {
+          if (err) {
+            console.log(err)
+          }
+        });
+      });
+      //create routes to serve torrent files according to name
+      app.get(`/torrent/${file.slice(0, -4)}.torrent`, (req, res) => {
+        res.sendFile(appDir + `${torrentRoute.slice(1)}/torrent/` +  `${file.slice(0, -4)}.torrent`);
+      });
+    });
+  });
+}
+
+
+module.exports = { PeerConnect, VideoConnect };

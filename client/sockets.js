@@ -49,7 +49,6 @@ let peerId = '';
 let candidates = [];
 // global variables for data parsing/transfer and fold image loading
 let imageData;
-let imageHeight;
 let counter = 0;
 let extCounter = 0;
 let otherCounter = 0;
@@ -57,6 +56,8 @@ let otherCounter = 0;
 // get img tag nodes
 let imageArray = Object.values(document.getElementsByTagName('img'));
 imageArray = imageArray.filter(node => node.hasAttribute('data-src'));
+let imageHeights;
+let imageSliceIndex;
 // assign ids to image
 imageArray.forEach((image, index) => image.setAttribute('id', index));
 
@@ -76,7 +77,7 @@ if (!browserSupport) {
 }
 
 // server is empty or assets downloaded so create initiator
-socket.on('create_base_initiator', (assetTypes, foldLoading) => {
+socket.on('create_base_initiator', (assetTypes, foldLoading, hasHeights) => {
   // save peer configuration object to front end for host
   configuration.assetTypes = assetTypes;
   configuration.foldLoading = foldLoading;
@@ -88,11 +89,11 @@ socket.on('create_base_initiator', (assetTypes, foldLoading) => {
     loadAssetsFromServer();
     return
   }
-  createInitiator(true);
+  createInitiator(true, hasHeights);
 });
 // Create receiver peer; server determined that this peer can be a receiver and
 // sent a stored offer object from an avaliable initiator
-socket.on('create_receiver_peer', (initiatorData, assetTypes, foldLoading) => {
+socket.on('create_receiver_peer', (initiatorData, assetTypes, foldLoading, imageHeights) => {
   console.log('creating receiver peer');
   // checks if none of the asset types are to be sent through P2P
   // if none, load straight from server
@@ -116,6 +117,19 @@ socket.on('create_receiver_peer', (initiatorData, assetTypes, foldLoading) => {
     reconnectTimer: 100,
   });
   peerMethods(p);
+
+  //setimageheights and decide which indeces of image you need to send
+  setImageHeights(imageArray, imageHeights);
+
+  //if foldLoading is off || if foldLoading is on and image is not in view
+  //send indeces of imageArray to request from initiator peer
+  for (let i = 0; i < imageArray.length; i += 1) {
+    if (!isElementInViewport(imageArray[i]) && configuration.foldLoading || !configuration.foldLoading) {
+      imageSliceIndex = i;
+      break;
+    }
+  }
+
   p.signal(initiatorData.offer);
   // peerId is the socket id of the avaliable initiator that this peer will pair with
   peerId = initiatorData.peerId;
@@ -126,6 +140,10 @@ socket.on('create_receiver_peer', (initiatorData, assetTypes, foldLoading) => {
 // answer object has arrived to the initiator. Connection will when the signal(message) is invoked.
 socket.on('answer_to_initiator', (message, peerLocation) => {
   console.log('answer_to_initiator');
+
+  //initiator now knows where to slice array before sending to peer
+  imageSliceIndex = imageSliceIndex;
+
   // this final signal where initiator receives the answer does not call
   // handleOnSignal/.on('signal'), it goes handleOnConnect.
   p.signal(message);
@@ -171,12 +189,12 @@ function handleOnSignal(data) {
   // send offer object to server for server to store
   if (data.type === 'offer') {
     console.log('Emitting offer_to_server.');
-    socket.emit('offer_to_server', { offer: data });
+    socket.emit('offer_to_server', { offer: data }, imageHeights);
   }
   // send answer object to server for server to send to avaliable initiator
   if (data.type === 'answer') {
     console.log('Emitting answer_to_server.');
-    socket.emit('answer_to_server', { answer: data, peerId });
+    socket.emit('answer_to_server', { answer: data, peerId }, imageSliceIndex);
   }
   // After the offer/answer object is generated, ice candidates are generated as
   // well. These are stored to be sent after the P2P connection is established.
@@ -197,7 +215,7 @@ function handleOnConnect() {
   }
   // send assets if initiator (uncomment this if trickle off for receiver)
   if (assetsDownloaded) {
-    sendAssetsToPeer(p);
+    sendAssetsToPeer(p, imageSliceIndex);
   }
 }
 
@@ -216,11 +234,6 @@ function handleOnData(data) {
     // if (assetsDownloaded) {
     //   sendAssetsToPeer(p)
     // }
-    return;
-  }
-
-  if (dataString.slice(0, 11) === 'sentHeights') {
-    setImageHeights(dataString, imageArray);
     return;
   }
 
@@ -262,7 +275,7 @@ function loopImage() {
         extCounter += 1;
         setServerAsset(imageSource);
       }
-      if (configuration.foldLoading) {
+      if (configuration.foldLoading && isElementInViewport(imageArray[i])) {
         setServerAsset(imageSource);
       }
     }
@@ -280,23 +293,21 @@ function setImage(imageData, imageArray, index) {
   }
 }
 
-
 // preset images with sent heights
-function setImageHeights(dataString, imageArray) {
-  console.log('setting image heights to elementinviewport!');
-  let imageArrayCopy = [];
-  imageHeight = JSON.parse(dataString.slice(11));
-  imageHeight.forEach((element, idx) => {
+function setImageHeights(imageArray, imageHeights) {
+  imageHeights.forEach((element, idx) => {
     imageArray[idx].style.height = `${element}px`;
   });
-  getBackgroundImages();
+  //what is this?
+  // getBackgroundImages();
 }
 
 // Creates an initiator (therefore emitting a signal that creates an offer). The base parameter determines if initiator should download assets from server (example: there are no other initiators connected or client's peer got disconnected).
-function createInitiator(base) {
+function createInitiator(base, hasHeights) {
   if (base) {
     loadAssetsFromServer();
     assetsDownloaded = true;
+    if (!hasHeights) imageHeights = setImageHeightsToSend(imageArray);
   }
   p = new Peer({
     initiator: true,
@@ -307,24 +318,21 @@ function createInitiator(base) {
 }
 
 // data chunking/parsing
-function sendAssetsToPeer(peer) {
-  //send heights of images to peer
-  sendImageHeights(imageArray, peer);
+function sendAssetsToPeer(peer, sliceIndex) {
+  //slice Array and only send requested data
+  imageArray = imageArray.slice(sliceIndex);
+  //send only if requested by foldLoading
   for (let i = 0; i < imageArray.length; i += 1) {
     const imageType = getImageType(imageArray[i]);
     if (configuration.assetTypes.includes(imageType)) {
       sendImage(imageArray[i], peer, i);
     }
-    console.log('File sent.');
+    // console.log('File sent.');
   }
 }
 
-function sendImageHeights(imageArray, peer) {
-  const imageHeights = [];
-  for (let f = 0; f < imageArray.length; f++) {
-    imageHeights.push(imageArray[f].height);
-  }
-  peer.send(`sentHeights ${JSON.stringify(imageHeights)}`);
+function setImageHeightsToSend(imageArray) {
+  return imageArray.map(imageNode => imageNode.height);
 }
 
 function getImageType(image) {
@@ -343,9 +351,9 @@ function sendImage(image, peer, imageIndex) {
     start = f * CHUNK_SIZE;
     end = (f + 1) * CHUNK_SIZE;
     peer.send(data.slice(start, end));
-    console.log(`File part ${f} sent.`);
+    // console.log(`File part ${f} sent.`);
   }
-  console.log('File fully sent.');
+  // console.log('File fully sent.');
   peer.send(`finished-sending${imageIndex}`);
 }
 

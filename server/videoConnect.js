@@ -6,19 +6,21 @@ module.exports = function (peerConfig, app) {
   const torrentRoute = peerConfig.torrentRoute;
   const domainName = peerConfig.domainName;
 
-  
+
   fs.readdir(path.join(__dirname, '../', videoRoute), (err, files) => {
     if (err) {
       console.log(err);
     }
 
     //create routes for each mp4 file to serve as webseeds
-    files.forEach(file => {
-      // console.log(file);
-      app.get(`/video/${file}`, (req, res) => {
-        res.sendFile(path.join(__dirname, '../', route, file));
+    if (files.length) {
+      files.forEach(file => {
+        // console.log(file);
+        app.get(`/video/${file}`, (req, res) => {
+          res.sendFile(path.join(__dirname, '../', route, file));
+        });
       });
-    });
+    }
   });
 
 

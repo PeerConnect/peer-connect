@@ -47,6 +47,8 @@ let assetsDownloaded = false;
 let peerId = '';
 // candidates is an array of the ice candidates to send once p2p is established
 let candidates = [];
+
+let connectionFlag = false;
 // global variables for data parsing/transfer and fold image loading
 let imageData;
 let counter = 0;
@@ -148,6 +150,14 @@ socket.on('answer_to_initiator', (message, peerLocation) => {
   // handleOnSignal/.on('signal'), it goes handleOnConnect.
   p.signal(message);
 
+  setTimeout(checkForConnection, 3000);
+
+  // location data of peer to render on page for demo
+  document.getElementById('peer_info').style.display = '';
+  if (peerLocation) {
+    document.getElementById('peer_info').innerHTML +=
+    `<br>* Sent data to ${peerLocation.city}, ${peerLocation.regionCode}, ${peerLocation.country} ${peerLocation.zipCode};`;
+  }
   demoFunctions.sentDataToPeerLocation(peerLocation);
 });
 
@@ -206,6 +216,7 @@ function handleOnSignal(data) {
 // handles when peers are connected through P2P
 function handleOnConnect() {
   console.log('CONNECTED');
+  connectionFlag = true;
   demoFunctions.reportTime(demoFunctions.currentTime, 'time_to_connect');
   // send ice candidates if exist
   if (candidates.length) {
@@ -217,6 +228,14 @@ function handleOnConnect() {
   if (assetsDownloaded) {
     sendAssetsToPeer(p, imageSliceIndex);
   }
+}
+
+function checkForConnection() {
+  console.log('checking for connection')
+  if (!connectionFlag) {
+    p.disconnect();
+  }
+  connectionFlag = false;
 }
 
 // handles when data is being received

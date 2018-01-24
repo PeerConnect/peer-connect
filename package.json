@@ -1,5 +1,5 @@
 {
-  "name": "peer-connect",
+  "name": "peer-connect-old",
   "version": "1.0.0",
   "description": "P2P CDN",
   "main": "server.js",
@@ -26,6 +26,7 @@
     "node-fetch": "^1.7.3",
     "parse-torrent": "^5.8.3",
     "path": "^0.12.7",
+    "peer-connect": "^0.1.1",
     "simple-peer": "^8.2.0",
     "socket.io": "^2.0.4",
     "stream-http": "^2.8.0",

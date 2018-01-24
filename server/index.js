@@ -7,9 +7,6 @@ const path = require('path');
 const appDir = path.dirname(require.main.filename);
 
 
-// all filetypes
-
-const imageTypes = ['jpeg', 'jpg', 'png', 'gif'];
 
 /**
 * Peer Connect object
@@ -27,6 +24,8 @@ function PeerConnect(config, server) {
   this.config.geolocate = this.config.geolocate !== false;
   this.config.peerVideos = this.config.peerVideos !== false;
   this.config.peerImages = this.config.peerImages !== false;
+
+  const imageTypes = ['jpeg', 'jpg', 'png', 'gif'];
 
   /** Filter out the excluded assetTypes */
   this.config.excludeFormats = lowerCaseConfig(this.config.excludeFormats);
@@ -74,7 +73,6 @@ function PeerConnect(config, server) {
       client.emit('load_server_video');
     }
 
-
     /** Creation of peers handled here */
     if (this.config.geolocate && this.config.peerImages) {
 
@@ -83,6 +81,7 @@ function PeerConnect(config, server) {
       /** cip is the client's ip address */
       this.cip = client.client.request.headers['x-forwarded-for'] || client.client.conn.remoteAddress;
       if (this.cip[0] === ':') this.cip = this.staticIP;
+
       /**
       * Fetch request to IP API to determine location (longitude, latitude)
       * Saves location to activeClients
@@ -99,8 +98,11 @@ function PeerConnect(config, server) {
             country: json.country_code,
           };
           this.activeClients[client.id].location = location;
-          // create base initiator if no avaliable initiator
-          // initiators avaliable, create receiver
+
+          /**
+          * Creates a base initiator if there is no avaliable initiator
+          * If initiators are available, create receiver peer
+          */
           if (this.serverStats.numInitiators < this.config.threshold) {
             createBaseInitiator(client, this.config);
           } else {
@@ -108,12 +110,12 @@ function PeerConnect(config, server) {
           }
         })
         .catch((err) => {
-        // if API fetch fails, turn of geolocate and create new initiator
+        /** if API fetch fails, turn off geolocate and create a new initiator */
           console.log(err);
           createBaseInitiator(client, this.config);
         });
     } else {
-      // if geolocate is off
+      /** If geolocate is off */
       if (this.serverStats.numInitiators < this.config.threshold || !this.config.peerImages) {
         createBaseInitiator(client, this.config);
       }
@@ -121,9 +123,12 @@ function PeerConnect(config, server) {
         createReceiver(client, this.activeClients, this.config, this.serverStats);
       }
     }
-    // Initiator sent offer object to server.
-    // Store offer object to the client's respective object inside this.activeClients.
-    // Set this client to an initiator and update this.numInitiators count.
+
+    /**
+    * Initiator sent offer object to server.
+    * Store offer object to the client's respective object inside this.activeClients.
+    * Set this client to an initiator and update this.numInitiators count.
+    */
     client.on('offer_to_server', (message, imageHeights, hasHeights) => {
       this.serverStats.numInitiators += 1;
       this.activeClients[client.id].initiator = true;
@@ -135,13 +140,19 @@ function PeerConnect(config, server) {
       console.log(`numClients, numInitiators: ${this.serverStats.numClients}, ${this.serverStats.numInitiators}`);
     });
 
-    // Receiver sent answer object to server.
-    // Send this answer object to the specific initiator that
-    // provided the offer object to the receiver.
+    /**
+    * Receiver sent answer object to server.
+    * Send this answer object to the specific initiator that
+    * provided the offer object to the receiver.
+    */
     client.on('answer_to_server', (message, imageSliceIndex) => {
       client.to(message.peerId).emit('answer_to_initiator', message.answer, this.activeClients[client.id].location, imageSliceIndex);
     });
-    // if diconnected user was an initiator, update accordingly with this.numClients as well
+
+    /**
+    * If the diconnected client was an initiator,
+    * update accordingly with this.numClients as well
+    */
     client.on('disconnect', () => {
       console.log(`disconnecting ${client.id}`);
       if (this.activeClients[client.id].initiator) {
@@ -155,24 +166,27 @@ function PeerConnect(config, server) {
   });
 }
 
-// create initiators after ip geolocation api call
+/** create initiators after ip geolocation api call */
 function createBaseInitiator(client, config) {
   client.emit('create_base_initiator', config.assetTypes, config.foldLoading, this.serverStats.hasHeights);
 }
 function createReceiver(client, activeClients, config, serverStats) {
   this.serverStats = serverStats;
   this.activeClients = activeClients;
-  // checks if geolocate config is on
+  /** checks if geolocate config is on */
   if (config.geolocate) {
-    // current client's location
+    /** current client's location */
     const clientLocation = this.activeClients[client.id].location;
-    // placeholder for the closest peer
+    /** placeholder for the closest peer */
     const closestPeer = {
       id: '',
       distance: Infinity,
     };
-    // iterate through this.activeClients to find closest initiator avaliable
-    // make that initiator unavaliable (initiator key set to false).
+
+    /**
+    * iterate through this.activeClients to find closest initiator avaliable
+    * make that initiator unavaliable (initiator key set to false).
+    */
     let tempLocation = null;
     let tempDistance = 0;
     Object.values(this.activeClients).forEach((clientObj) => {
@@ -219,9 +233,10 @@ function createReceiver(client, activeClients, config, serverStats) {
     client.emit('create_receiver_peer', initiatorData, config.assetTypes, config.foldLoading);
   }
 }
-
-// function to calculate distance using two sets of coordindates
-// source: https://www.geodatasource.com/developers/javascript
+/**
+* function to calculate distance using two sets of coordindates
+* source: https://www.geodatasource.com/developers/javascript
+*/
 function distance(lat1, lon1, lat2, lon2) {
   const radlat1 = Math.PI * (lat1 / 180);
   const radlat2 = Math.PI * (lat2 / 180);
@@ -240,10 +255,14 @@ function declareAssetTypes(mediaTypes, typesObj) {
     mediaTypes.reduce((includedTypes, mediaType) => includedTypes.concat(typesObj[mediaType]), [])
   );
 }
+
 function lowerCaseConfig(arr) {
   return arr.map(str => str.toLowerCase());
 }
 
+/**
+* Function that handles torrents and video files
+*/
 function VideoConnect (peerConfig, app) {
   const createTorrent = require('create-torrent');
   const fs = require('fs');
@@ -258,7 +277,7 @@ function VideoConnect (peerConfig, app) {
       console.log(err);
     }
 
-    //create routes for each mp4 file to serve as webseeds
+    /** Creates routes for each mp4 file to serve as webseeds */
     files.forEach(file => {
       // console.log(file);
       app.get(`/video/${file}`, (req, res) => {
@@ -268,14 +287,14 @@ function VideoConnect (peerConfig, app) {
   });
 
 
-  //if torrent folder already exists, just create routes
+  /** If torrent folder already exists, just create routes */
   if (fs.existsSync(`${torrentRoute}/torrent`)) {
     fs.readdir(appDir + videoRoute.slice(1), (err, files) => {
       if (err) {
         console.log(err);
       }
 
-      //loop through video files and create torrent routes that send torrent files
+      /** Loops through video files and create torrent routes that send torrent files */
       files.forEach(file => {
         app.get(`/torrent/${file.slice(0, -4)}.torrent`, (req, res) => {
           res.sendFile(appDir + `${torrentRoute.slice(1)}/torrent/` + `${file.slice(0, -4)}.torrent`);
@@ -285,7 +304,7 @@ function VideoConnect (peerConfig, app) {
     return
   }
 
-  //make torrent directory
+  /** Makes torrent directory */
   fs.mkdir(`${torrentRoute}/torrent`);
 
   fs.readdir(appDir + videoRoute.slice(1), (err, files) => {
@@ -294,10 +313,10 @@ function VideoConnect (peerConfig, app) {
     }
 
     files.forEach(file => {
-      //this is for actual
-      //create torrents with the mp4 links as webseed
+      //THIS IS FOR ACTUAL
+      /** Creates torrents with the mp4 links as webseed */
       // createTorrent(appDir + videoRoute.slice(1) + '/' + file, { urlList: [`${domainName}/video/${file}`] }, (err, torrent) => {
-      //this is for test
+      //THIS IS FOR TEST
       createTorrent(appDir + videoRoute.slice(1) + '/' + file, { urlList: [`${domainName}/${file}`] }, (err, torrent) => {
         fs.writeFile(appDir + `/assets/torrent/${file.slice(0 , -4)}.torrent`, torrent, (err) => {
           if (err) {
@@ -305,7 +324,8 @@ function VideoConnect (peerConfig, app) {
           }
         });
       });
-      //create routes to serve torrent files according to name
+
+      /** Creates routes to serve torrent files according to name */
       app.get(`/torrent/${file.slice(0, -4)}.torrent`, (req, res) => {
         res.sendFile(appDir + `${torrentRoute.slice(1)}/torrent/` +  `${file.slice(0, -4)}.torrent`);
       });

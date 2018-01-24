@@ -1,7 +1,7 @@
 const express = require('express');
 const path = require('path');
-const { PeerConnect, VideoConnect } = require('./server/index.js')
-// const { PeerConnect, VideoConnect } = require('peer-connect')
+// const { PeerConnect, VideoConnect } = require('./server/index.js')
+const { PeerConnect, VideoConnect } = require('peer-connect');
 // const PeerConnect = require('./server/peerConnect.js');
 // const VideoConnect = require('./server/videoConnect.js');
 
@@ -47,8 +47,8 @@ const peerConfig = {
   domainName: 'https://webseed.btorrent.xyz',
 };
 
-    //begin videoConnect
+//begin videoConnect
 VideoConnect(peerConfig, app);
 
 
-PeerConnect(peerConfig, server);
+PeerConnect(server, peerConfig);

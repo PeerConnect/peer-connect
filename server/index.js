@@ -6,34 +6,41 @@ const fs = require('fs');
 const path = require('path');
 const appDir = path.dirname(require.main.filename);
 
-
-
 /**
 * Peer Connect object
 * @constructor
-* @param {object} config - The config object.
 * @param {object} server - Put your server in here.
+* @param {object} app - Put your app in here.
+* @param {object} config - The config object.
 */
-function PeerConnect(config, server) {
+function PeerConnect(server, app, peerConfig) {
+  if (peerConfig.peerImages) ImageConnect(server, peerConfig);
+  if (peerConfig.peerVideos) VideoConnect(app, peerConfig);
+}
+
+/**
+* Function that handles torrents and video files
+*/
+function ImageConnect(server, peerConfig) {
   /**
   * Config object defaults to true if not specified.
   */
-  this.config = { ...config }; // eslint rules: parameters should be immutable
-  this.config.threshold = this.config.threshold || 1;
-  this.config.foldloading = this.config.foldLoading !== false;
-  this.config.geolocate = this.config.geolocate !== false;
-  this.config.peerVideos = this.config.peerVideos !== false;
-  this.config.peerImages = this.config.peerImages !== false;
+  this.peerConfig = { ...peerConfig }; // eslint rules: parameters should be immutable
+  this.peerConfig.threshold = this.peerConfig.threshold || 1;
+  this.peerConfig.foldloading = this.peerConfig.foldLoading !== false;
+  this.peerConfig.geolocate = this.peerConfig.geolocate !== false;
+  this.peerConfig.peerVideos = this.peerConfig.peerVideos !== false;
+  this.peerConfig.peerImages = this.peerConfig.peerImages !== false;
 
   const imageTypes = ['jpeg', 'jpg', 'png', 'gif'];
 
   /** Filter out the excluded assetTypes */
-  this.config.excludeFormats = lowerCaseConfig(this.config.excludeFormats);
+  this.peerConfig.excludeFormats = lowerCaseConfig(this.peerConfig.excludeFormats);
 
-  if (!this.config.peerImages) {
-    this.config.assetTypes = [];
+  if (!this.peerConfig.peerImages) {
+    this.peerConfig.assetTypes = [];
   } else {
-    this.config.assetTypes = imageTypes.filter(type => !this.config.excludeFormats.includes(type));
+    this.peerConfig.assetTypes = imageTypes.filter(type => !this.peerConfig.excludeFormats.includes(type));
   }
 
   /** NON-CONFIGURABLES - Sockets setup */
@@ -60,8 +67,8 @@ function PeerConnect(config, server) {
     };
 
     /** Fs loop for torrents */
-    if (this.config.peerVideos) {
-      fs.readdir(appDir + `${config.torrentRoute.slice(1)}/torrent`, (err, files) => {
+    if (this.peerConfig.peerVideos) {
+      fs.readdir(appDir + `${peerConfig.torrentRoute.slice(1)}/torrent`, (err, files) => {
         if (err) {
           console.log(err);
         }
@@ -74,7 +81,7 @@ function PeerConnect(config, server) {
     }
 
     /** Creation of peers handled here */
-    if (this.config.geolocate && this.config.peerImages) {
+    if (this.peerConfig.geolocate && this.peerConfig.peerImages) {
 
       /** Uses staticIP if localhost uses static ip */
       this.staticIP = '45.59.229.42';
@@ -103,24 +110,24 @@ function PeerConnect(config, server) {
           * Creates a base initiator if there is no avaliable initiator
           * If initiators are available, create receiver peer
           */
-          if (this.serverStats.numInitiators < this.config.threshold) {
-            createBaseInitiator(client, this.config);
+          if (this.serverStats.numInitiators < this.peerConfig.threshold) {
+            createBaseInitiator(client, this.peerConfig);
           } else {
-            createReceiver(client, this.activeClients, this.config, this.serverStats);
+            createReceiver(client, this.activeClients, this.peerConfig, this.serverStats);
           }
         })
         .catch((err) => {
         /** if API fetch fails, turn off geolocate and create a new initiator */
           console.log(err);
-          createBaseInitiator(client, this.config);
+          createBaseInitiator(client, this.peerConfig);
         });
     } else {
       /** If geolocate is off */
-      if (this.serverStats.numInitiators < this.config.threshold || !this.config.peerImages) {
-        createBaseInitiator(client, this.config);
+      if (this.serverStats.numInitiators < this.peerConfig.threshold || !this.peerConfig.peerImages) {
+        createBaseInitiator(client, this.peerConfig);
       }
-      else if (this.serverStats.numInitiators >= this.config.threshold) {
-        createReceiver(client, this.activeClients, this.config, this.serverStats);
+      else if (this.serverStats.numInitiators >= this.peerConfig.threshold) {
+        createReceiver(client, this.activeClients, this.peerConfig, this.serverStats);
       }
     }
 
@@ -167,14 +174,14 @@ function PeerConnect(config, server) {
 }
 
 /** create initiators after ip geolocation api call */
-function createBaseInitiator(client, config) {
-  client.emit('create_base_initiator', config.assetTypes, config.foldLoading, this.serverStats.hasHeights);
+function createBaseInitiator(client, peerConfig) {
+  client.emit('create_base_initiator', peerConfig.assetTypes, peerConfig.foldLoading, this.serverStats.hasHeights);
 }
-function createReceiver(client, activeClients, config, serverStats) {
+function createReceiver(client, activeClients, peerConfig, serverStats) {
   this.serverStats = serverStats;
   this.activeClients = activeClients;
-  /** checks if geolocate config is on */
-  if (config.geolocate) {
+  /** checks if geolocate peerConfig is on */
+  if (peerConfig.geolocate) {
     /** current client's location */
     const clientLocation = this.activeClients[client.id].location;
     /** placeholder for the closest peer */
@@ -213,8 +220,8 @@ function createReceiver(client, activeClients, config, serverStats) {
     this.activeClients[closestPeer.id].initiator = false;
     // Updates this.numInitiators and emit to receiver and send initiator data
     this.serverStats.numInitiators -= 1;
-    console.log(config.assetTypes);
-    client.emit('create_receiver_peer', initiatorData, config.assetTypes, config.foldLoading, this.serverStats.imageHeights);
+    console.log(peerConfig.assetTypes);
+    client.emit('create_receiver_peer', initiatorData, peerConfig.assetTypes, peerConfig.foldLoading, this.serverStats.imageHeights);
   } else {
     // loops through activeClients and randomly finds avaliable initiator
     const initiatorsArr = [];
@@ -229,8 +236,8 @@ function createReceiver(client, activeClients, config, serverStats) {
     this.activeClients[selectedInitiatorId].initiator = false;
     // Updates this.numInitiators and emit to receiver and send initiator data
     this.serverStats.numInitiators -= 1;
-    console.log(config.assetTypes);
-    client.emit('create_receiver_peer', initiatorData, config.assetTypes, config.foldLoading);
+    console.log(peerConfig.assetTypes);
+    client.emit('create_receiver_peer', initiatorData, peerConfig.assetTypes, peerConfig.foldLoading);
   }
 }
 /**
@@ -263,7 +270,7 @@ function lowerCaseConfig(arr) {
 /**
 * Function that handles torrents and video files
 */
-function VideoConnect (peerConfig, app) {
+function VideoConnect (app, peerConfig) {
   const createTorrent = require('create-torrent');
   const fs = require('fs');
   const path = require('path');
@@ -334,4 +341,4 @@ function VideoConnect (peerConfig, app) {
 }
 
 
-module.exports = { PeerConnect, VideoConnect };
+module.exports = PeerConnect;

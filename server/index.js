@@ -11,15 +11,15 @@ const appDir = path.dirname(require.main.filename);
 * @constructor
 * @param {object} server - Put your server in here.
 * @param {object} app - Put your app in here.
-* @param {object} config - The config object.
+* @param {object} peerConfig - The config object.
 */
 function PeerConnect(server, app, peerConfig) {
-  if (peerConfig.peerImages) ImageConnect(server, peerConfig);
+  ImageConnect(server, peerConfig);
   if (peerConfig.peerVideos) VideoConnect(app, peerConfig);
 }
 
 /**
-* Function that handles torrents and video files
+* Function that handles images
 */
 function ImageConnect(server, peerConfig) {
   /**
@@ -35,12 +35,14 @@ function ImageConnect(server, peerConfig) {
   const imageTypes = ['jpeg', 'jpg', 'png', 'gif'];
 
   /** Filter out the excluded assetTypes */
-  this.peerConfig.excludeFormats = lowerCaseConfig(this.peerConfig.excludeFormats);
+  this.peerConfig.excludeFormats = this.peerConfig.excludeFormats
+    .map(str => str.toLowerCase());
 
   if (!this.peerConfig.peerImages) {
     this.peerConfig.assetTypes = [];
   } else {
-    this.peerConfig.assetTypes = imageTypes.filter(type => !this.peerConfig.excludeFormats.includes(type));
+    this.peerConfig.assetTypes = imageTypes
+      .filter(type => !this.peerConfig.excludeFormats.includes(type));
   }
 
   /** NON-CONFIGURABLES - Sockets setup */
@@ -57,7 +59,7 @@ function ImageConnect(server, peerConfig) {
 
   /** Socket.io - 'connection' triggers on client connection */
   this.io.on('connection', (client) => {
-    console.log(`socket connection started. ID: ${client.id}`);
+    // console.log(`socket connection started. ID: ${client.id}`);
     this.serverStats.numClients += 1;
     this.activeClients[client.id] = {
       id: client.id,
@@ -173,10 +175,20 @@ function ImageConnect(server, peerConfig) {
   });
 }
 
-/** create initiators after ip geolocation api call */
+/** Creates initiators after ip geolocation api call
+* @param {object} client - Socket client
+* @param {object} peerConfig - Config preset by user
+*/
 function createBaseInitiator(client, peerConfig) {
   client.emit('create_base_initiator', peerConfig.assetTypes, peerConfig.foldLoading, this.serverStats.hasHeights);
 }
+
+/** Creates receiver peers after ip geolocation api call
+* @param {object} client - Socket client
+* @param {object} activeClients - list of active clients to connect to
+* @param {object} peerConfig - Config preset by user
+* @param {object} serverStats - Information object held by server to update
+*/
 function createReceiver(client, activeClients, peerConfig, serverStats) {
   this.serverStats = serverStats;
   this.activeClients = activeClients;
@@ -190,12 +202,12 @@ function createReceiver(client, activeClients, peerConfig, serverStats) {
       distance: Infinity,
     };
 
-    /**
-    * iterate through this.activeClients to find closest initiator avaliable
-    * make that initiator unavaliable (initiator key set to false).
-    */
     let tempLocation = null;
     let tempDistance = 0;
+    /**
+    * Iterate through this.activeClients to find closest initiator avaliable
+    * make that initiator unavaliable (initiator key set to false).
+    */
     Object.values(this.activeClients).forEach((clientObj) => {
       if (clientObj.initiator) {
         tempLocation = this.activeClients[clientObj.id].location;
@@ -218,12 +230,11 @@ function createReceiver(client, activeClients, peerConfig, serverStats) {
       location: selectedInitiator.location,
     };
     this.activeClients[closestPeer.id].initiator = false;
-    // Updates this.numInitiators and emit to receiver and send initiator data
+    /** Updates this.numInitiators and emit to receiver and send initiator data */
     this.serverStats.numInitiators -= 1;
-    console.log(peerConfig.assetTypes);
     client.emit('create_receiver_peer', initiatorData, peerConfig.assetTypes, peerConfig.foldLoading, this.serverStats.imageHeights);
   } else {
-    // loops through activeClients and randomly finds avaliable initiator
+    /** loops through activeClients and randomly finds avaliable initiator */
     const initiatorsArr = [];
     Object.values(this.activeClients).forEach((clientObj) => {
       if (clientObj.initiator) initiatorsArr.push(clientObj.id);
@@ -234,15 +245,15 @@ function createReceiver(client, activeClients, peerConfig, serverStats) {
       peerId: selectedInitiatorId,
     };
     this.activeClients[selectedInitiatorId].initiator = false;
-    // Updates this.numInitiators and emit to receiver and send initiator data
+    /** Updates this.numInitiators and emit to receiver and send initiator data */
     this.serverStats.numInitiators -= 1;
-    console.log(peerConfig.assetTypes);
     client.emit('create_receiver_peer', initiatorData, peerConfig.assetTypes, peerConfig.foldLoading);
   }
 }
+
 /**
-* function to calculate distance using two sets of coordindates
-* source: https://www.geodatasource.com/developers/javascript
+* Function to calculate distance using two sets of coordindates
+* Source: https://www.geodatasource.com/developers/javascript
 */
 function distance(lat1, lon1, lat2, lon2) {
   const radlat1 = Math.PI * (lat1 / 180);
@@ -257,18 +268,15 @@ function distance(lat1, lon1, lat2, lon2) {
   return dist;
 }
 
-function declareAssetTypes(mediaTypes, typesObj) {
-  return (
-    mediaTypes.reduce((includedTypes, mediaType) => includedTypes.concat(typesObj[mediaType]), [])
-  );
-}
-
 function lowerCaseConfig(arr) {
-  return arr.map(str => str.toLowerCase());
+  return
 }
 
 /**
 * Function that handles torrents and video files
+* @constructor
+* @param {object} app - app from express()
+* @param {object} peerConfig - config preset by user
 */
 function VideoConnect (app, peerConfig) {
   const createTorrent = require('create-torrent');
@@ -286,7 +294,6 @@ function VideoConnect (app, peerConfig) {
 
     /** Creates routes for each mp4 file to serve as webseeds */
     files.forEach(file => {
-      // console.log(file);
       app.get(`/video/${file}`, (req, res) => {
         res.sendFile(appDir + route.slice(1) + file);
       });
@@ -320,10 +327,10 @@ function VideoConnect (app, peerConfig) {
     }
 
     files.forEach(file => {
-      //THIS IS FOR ACTUAL
+      /** THIS IS FOR ACTUAL */
       /** Creates torrents with the mp4 links as webseed */
       // createTorrent(appDir + videoRoute.slice(1) + '/' + file, { urlList: [`${domainName}/video/${file}`] }, (err, torrent) => {
-      //THIS IS FOR TEST
+      /** THIS IS FOR TEST */
       createTorrent(appDir + videoRoute.slice(1) + '/' + file, { urlList: [`${domainName}/${file}`] }, (err, torrent) => {
         fs.writeFile(appDir + `${torrentRoute.slice(1)}/torrent/${file.slice(0 , -4)}.torrent`, torrent, (err) => {
           if (err) {
@@ -339,6 +346,5 @@ function VideoConnect (app, peerConfig) {
     });
   });
 }
-
 
 module.exports = PeerConnect;

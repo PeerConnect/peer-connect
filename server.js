@@ -32,7 +32,7 @@ const peerConfig = {
   //load images p2p
   peerImages: true,
   //load videos p2p
-  peerVideos: true,
+  peerVideos: false,
   // asset file formats to exclude from peers
   excludeFormats: ['gif'],
   // load images above the fold from server if foldLoading: true

@@ -14,12 +14,12 @@ const appDir = path.dirname(require.main.filename);
 * @param {object} peerConfig - The config object.
 */
 function PeerConnect(server, app, peerConfig) {
-  if (peerConfig.peerImages) ImageConnect(server, peerConfig);
+  ImageConnect(server, peerConfig);
   if (peerConfig.peerVideos) VideoConnect(app, peerConfig);
 }
 
 /**
-* Function that handles torrents and video files
+* Function that handles images
 */
 function ImageConnect(server, peerConfig) {
   /**

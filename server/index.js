@@ -11,18 +11,24 @@ const appDir = path.dirname(require.main.filename);
 
 const imageTypes = ['jpeg', 'jpg', 'png', 'gif'];
 
+/**
+* Peer Connect object
+* @constructor
+* @param {object} config - The config object.
+* @param {object} server - Put your server in here.
+*/
 function PeerConnect(config, server) {
-  // DEFAULT CONFIGURABLES
+  /**
+  * Config object defaults to true if not specified.
+  */
   this.config = { ...config }; // eslint rules: parameters should be immutable
   this.config.threshold = this.config.threshold || 1;
-  this.config.foldloading = this.config.foldLoading !== false; // default true
-  this.config.geolocate = this.config.geolocate !== false; // defaults to true
-  this.config.peerVideos = this.config.peerVideos !== false; //defaults to true
-  this.config.peerImages = this.config.peerImages !== false; //defaults to true
+  this.config.foldloading = this.config.foldLoading !== false;
+  this.config.geolocate = this.config.geolocate !== false;
+  this.config.peerVideos = this.config.peerVideos !== false;
+  this.config.peerImages = this.config.peerImages !== false;
 
-  // REFERENCED CONFIGURABLES
-  // include the inputted media types
-  // filter out the excluded assetTypes after lowercasing excludeFormats
+  /** Filter out the excluded assetTypes */
   this.config.excludeFormats = lowerCaseConfig(this.config.excludeFormats);
 
   if (!this.config.peerImages) {
@@ -31,21 +37,19 @@ function PeerConnect(config, server) {
     this.config.assetTypes = imageTypes.filter(type => !this.config.excludeFormats.includes(type));
   }
 
-  // NON-CONFIGURABLES
-  // Sockets setup
+  /** NON-CONFIGURABLES - Sockets setup */
   this.io = socket(server);
-  // Store list of all clients actively using app
+  /** Stores list of all clients actively using app */
   this.activeClients = {};
-  // number of clients, number of intiators
+  /** Information that signaling server holds */
   this.serverStats = {
     numClients: 0,
     numInitiators: 0,
     hasHeights: false,
     imageHeights: [],
   };
-  //set up for video
 
-  // server socket
+  /** Socket.io - 'connection' triggers on client connection */
   this.io.on('connection', (client) => {
     console.log(`socket connection started. ID: ${client.id}`);
     this.serverStats.numClients += 1;
@@ -56,14 +60,13 @@ function PeerConnect(config, server) {
       location: null,
     };
 
-    //fs loop for torrents
+    /** Fs loop for torrents */
     if (this.config.peerVideos) {
       fs.readdir(appDir + `${config.torrentRoute.slice(1)}/torrent`, (err, files) => {
         if (err) {
           console.log(err);
         }
         files.forEach(file => {
-          // console.log(file);
           client.emit('torrent', `${file}`)
         });
       });
@@ -72,15 +75,18 @@ function PeerConnect(config, server) {
     }
 
 
-    // creation of peers handled here
+    /** Creation of peers handled here */
     if (this.config.geolocate && this.config.peerImages) {
-      // cip is the client's ip address
-      // if localhost use static ip
+
+      /** Uses staticIP if localhost uses static ip */
       this.staticIP = '45.59.229.42';
+      /** cip is the client's ip address */
       this.cip = client.client.request.headers['x-forwarded-for'] || client.client.conn.remoteAddress;
       if (this.cip[0] === ':') this.cip = this.staticIP;
-      // fetch request to IP API to determine location (longitude, latitude)
-      // save location to activeClients
+      /**
+      * Fetch request to IP API to determine location (longitude, latitude)
+      * Saves location to activeClients
+      */
       fetch(`http://freegeoip.net/json/${this.cip}`)
         .then(res => res.json())
         .then((json) => {

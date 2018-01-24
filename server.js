@@ -2,9 +2,6 @@ const express = require('express');
 const path = require('path');
 const PeerConnect = require('./server/index.js')
 // const { PeerConnect, VideoConnect } = require('peer-connect')
-// const PeerConnect = require('./server/peerConnect.js');
-// const VideoConnect = require('./server/videoConnect.js');
-
 // App setup
 const PORT = process.env.PORT || 8080;
 const app = express();
@@ -46,6 +43,5 @@ const peerConfig = {
   //domain name
   domainName: 'https://webseed.btorrent.xyz',
 };
-
 
 PeerConnect(server, app, peerConfig);

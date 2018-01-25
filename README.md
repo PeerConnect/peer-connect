@@ -8,7 +8,7 @@
 </h1>
 
 <h4 align="center">A P2P CDN Implementation</h4>
-[![Price](https://img.shields.io/badge/price-FREE-0098f7.svg)](https://github.com/peerconnect/peer-connect/license)
+[![NPM](https://img.shields.io/npm/v/npm.svg)](https://www.npmjs.com/package/peer-connect-client)
 
 
 ## About

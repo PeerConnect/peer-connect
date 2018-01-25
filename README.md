@@ -7,7 +7,7 @@
   <br>
 </h1>
 
-<h4 align="left">A P2P CDN Implementation</h4>
+<h4 align="center">A P2P CDN Implementation</h4>
 
 ## About
 PeerConnect is a proof of concept that aims to serve static assets (videos/images) over a peer to peer delivery network powered by WebRTC (images), WebTorrent (videos), and WebSockets (signaling)
@@ -18,6 +18,9 @@ PeerConnect is a proof of concept that aims to serve static assets (videos/image
 ## Usage
 Using PeerConnect requires a script on the client end and initiation on the server.
 ### Setup
+```
+npm install --save peer-connect-client peer-connect-server
+```
 #### Client
 If using a file bundler e.g. (browserify), you can require it in your script file.
 ```js
@@ -41,6 +44,18 @@ Here's how you would use it in your server:
 ```js
 const PeerConnectServer = require('peer-connect-server');
 const server = app.listen(8000);
+
+//to allow cross origin resource sharing
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept"
+  );
+  next();
+});
+
+PeerConnect(server, app, [opts]);
 PeerConnectServer(server, app, [opts]);
 ```
 
@@ -84,10 +99,10 @@ If opts is specified to PeerConnectServer, it will override the default options 
 ## Contributing
 To contribute to `PeerConnect`, fork the repository and clone it to your machine then install dependencies with `npm install`. If you're interested in joining the Peer Connect team as a contributor, feel free to message one of us directly!
 ## Authors
-- Justin Ko (https://github.com/justinko43)
-- Mike Gutierrez (https://github.com/mikegutierrez)
-- Peter Lee (https://github.com/wasafune)
-- Jim Kang (https://github.com/jiminykbob)
+- <b>Justin Ko</b> (https://github.com/justinko43)
+- <b>Mike Gutierrez</b> (https://github.com/mikegutierrez)
+- <b>Peter Lee</b> (https://github.com/wasafune)
+- <b>Jim Kang</b> (https://github.com/jiminykbob)
 
 ## License
 This project is licensed under the MIT License - see the LICENSE file for details

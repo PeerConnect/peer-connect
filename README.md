@@ -55,7 +55,6 @@ app.use((req, res, next) => {
   next();
 });
 
-PeerConnect(server, app, [opts]);
 PeerConnectServer(server, app, [opts]);
 ```
 

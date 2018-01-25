@@ -19,28 +19,29 @@ PeerConnect is a proof of concept that aims to serve static assets (videos/image
 Using PeerConnect requires a script on the client end and initiation on the server.
 ### Setup
 #### Client
-If using a file bundler e.g. (browserify), you can require it in.
+If using a file bundler e.g. (browserify), you can require it in your script file.
 ```js
-const PeerConnect = require('peer-connect');
+const PeerConnectClient = require('peer-connect-client');
+PeerConnectClient();
 ```
-If you just want to test the module without bundling, it is currently being hosted on unpkg CDN. Use it as a script in your html file.
+If you want to use the module without bundling, it is currently being hosted on unpkg CDN. Use it as a script in your html file.
 ```
-https://unpkg.com/peerconnect.js@1.0.11/client/dist/sockets.min.js
+https://unpkg.com/peer-connect-client@0.1.3/peer-connect-client.min.js
 ```
 #### Server
 PeerConnect utilizes Express and socket.io to coordinate WebRTC connections. In addition, in order to create webseeds, we create routes serving the video files.
 
-To use it, require peerConnect from our package and pass in the Node Server instance you're using along with your PeerConnect configurations. In Express, you can get this instance by calling app.listen.
+To use it, require PeerConnectServer from our package and pass in the Node Server instance you're using along with your PeerConnectServer configurations. In Express, you can get this instance by calling app.listen.
 
 Here's how you would use it in your server:
 ```js
-const PeerConnect = require('peer-connect');
+const PeerConnectServer = require('peer-connect-server');
 const server = app.listen(8000);
-PeerConnect(server, app, [opts]);
+PeerConnectServer(server, app, [opts]);
 ```
 ### Configuration
-It's easy to incorporate `PeerConnect`. Just provide us with a few details on your peerConfig object and we'll do the rest!
-If opts is specified to PeerConnect, it will override the default options (shown below).
+It's easy to incorporate `PeerConnectServer`. Just provide us with a few details on your peerConfig object and we'll do the rest!
+If opts is specified to PeerConnectServer, it will override the default options (shown below).
 
 ```threshold``` - An integer threshold value to determine when to turn on P2P image sharing <i>e.g. if threshold = 3, fourth client will load from peers</i>
 <br>```peerImages``` - A boolean that determines whether to load images P2P

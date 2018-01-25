@@ -8,6 +8,7 @@
 </h1>
 
 <h4 align="center">A P2P CDN Implementation</h4>
+
 [![npm](https://img.shields.io/npm/v/peer-connect-client.svg)](https://www.npmjs.com/package/peer-connect-client)
 
 ## About

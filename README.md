@@ -11,8 +11,8 @@
 
 [![Price](https://img.shields.io/badge/price-FREE-0098f7.svg)](https://github.com/peerconnect/peer-connect/blob/master/LICENSE)
 [![npm](https://img.shields.io/npm/v/peer-connect-client.svg)](https://www.npmjs.com/package/peer-connect-client)
-[![license](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/peerconnect/peer-connect/)
-[![GitHub package version](https://img.shields.io/github/package-json/v/badges/shields.svg)](https://github.com/peerconnect/peer-connect/)
+[![license](https://img.shields.io/github/license/peerconnect/peer-connect.svg)](https://github.com/peerconnect/peer-connect/)
+[![GitHub package version](https://img.shields.io/github/package-json/v/peerconnect/peer-connect.svg)](https://github.com/peerconnect/peer-connect/)
 
 ## About
 PeerConnect is a proof of concept that aims to serve static assets (videos/images) over a peer to peer delivery network powered by WebRTC (images), WebTorrent (videos), and WebSockets (signaling)

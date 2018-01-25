@@ -28,6 +28,10 @@ If you want to use the module without bundling, it is currently being hosted on 
 ```
 https://unpkg.com/peer-connect-client@0.1.3/peer-connect-client.min.js
 ```
+You will need to bring in socket.io as a script in your html file.
+```html
+<script src="/socket.io/socket.io.js"></script>
+```
 #### Server
 PeerConnect utilizes Express and socket.io to coordinate WebRTC connections. In addition, in order to create webseeds, we create routes serving the video files.
 
@@ -39,6 +43,17 @@ const PeerConnectServer = require('peer-connect-server');
 const server = app.listen(8000);
 PeerConnectServer(server, app, [opts]);
 ```
+
+### Example
+Set src attributes in a data-src attribute for assets!
+```html
+<video data-src="../assets/videos/yosemite-hd.mp4" controls src=""></video>
+  <div class="image-container-inner">
+    <img data-src="../assets/image1.jpg">
+    <img data-src="../assets/image2.png">
+  </div>
+```
+
 ### Configuration
 It's easy to incorporate `PeerConnectServer`. Just provide us with a few details on your peerConfig object and we'll do the rest!
 If opts is specified to PeerConnectServer, it will override the default options (shown below).

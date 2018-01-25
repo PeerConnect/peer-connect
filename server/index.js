@@ -332,7 +332,7 @@ function VideoConnect (app, peerConfig) {
       // createTorrent(appDir + videoRoute.slice(1) + '/' + file, { urlList: [`${domainName}/video/${file}`] }, (err, torrent) => {
       /** THIS IS FOR TEST */
       createTorrent(appDir + videoRoute.slice(1) + '/' + file, { urlList: [`${domainName}/${file}`] }, (err, torrent) => {
-        fs.writeFile(appDir + `/assets/torrent/${file.slice(0 , -4)}.torrent`, torrent, (err) => {
+        fs.writeFile(appDir + `${torrentRoute.slice(1)}/torrent/${file.slice(0 , -4)}.torrent`, torrent, (err) => {
           if (err) {
             console.log(err)
           }

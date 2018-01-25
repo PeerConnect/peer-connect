@@ -1,55 +1,8 @@
 let assert = chai.assert;
 let expect = chai.expect;
-// const io = require('socket.io-client');
-// const should = require('should');
-// const peerConnect = require('../peerConnect.js');
-// const sockets = require('../js/sockets.js');
 
-// describe('Array', () => {
-//   describe('#indexOf()', () => {
-//     it('should return -1 when the value is not present', () => {
-//       assert.equal(-1, [1, 2, 3].indexOf(4));
-//     });
-//   });
-// });
-
-// const socketURL = 'http://localhost:8080';
-
-// const options = {
-//   transports: ['websocket'],
-//   'force new connection': true
-// };
-
-// const serverStats = {
-//   numClients: 0,
-//   numInitiators: 0,
-// };
-
-// const user1 = {
-//   id: 'jedOwuvvWqFwcLsZAAAA',
-//   inititiator: true,
-//   offer: null,
-//   locatgion: null
-// };
-
-// const activeClients = {};
-
-// describe('peerConnect()', () => {
-//   it('should create an active user when client connects', (done) => {
-//     const client = io.connect(socketURL, options);
-
-//     client.emit('offer_to_server', ({ offer: data }));
-
-//     serverStats.numClients.should.equal(1);
-
-//     client.disconnect();
-//     done();
-//   });
-// });
-
-
-describe('load videos from server', () => {
-  before(function() {
+describe('loading and manipulating dom assets', () => {
+  before(() => {
     const fixture = '<video id="video" data-src="./assets/videos/agitation-new-zealand-4k.mp4"> cool video </video>' +
                     '<video data-src="./assets/videos/yosemite-hd.mp4"></video>' +
                     '<img height="300" src="./assets/image2.png">' +
@@ -107,5 +60,4 @@ describe('load videos from server', () => {
     expect(imageHeights[0]).to.equal(300);
     expect(imageHeights[1]).to.equal(250);
   });
-
 });

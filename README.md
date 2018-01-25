@@ -36,6 +36,17 @@ Here's how you would use it in your server:
 ```js
 const PeerConnect = require('peer-connect');
 const server = app.listen(8000);
+
+//to allow cross origin resource sharing
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept"
+  );
+  next();
+});
+
 PeerConnect(server, app, [opts]);
 ```
 ### Configuration

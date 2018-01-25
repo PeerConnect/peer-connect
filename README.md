@@ -21,7 +21,7 @@ Using PeerConnect requires a script on the client end and initiation on the serv
 #### Client
 If using a file bundler e.g. (browserify), you can require it in.
 ```js
-const peerConnect = require('peer-connect');
+const PeerConnect = require('peer-connect');
 ```
 If you just want to test the module without bundling, it is currently being hosted on unpkg CDN. Use it as a script in your html file.
 ```
@@ -36,10 +36,11 @@ Here's how you would use it in your server:
 ```js
 const PeerConnect = require('peer-connect');
 const server = app.listen(8000);
-PeerConnect(peerConfig, server);
+PeerConnect(server, app, [opts]);
 ```
 ### Configuration
-It's easy to incorporate `PeerConnect`. Just provide us with a few details on your P2P configuration and we'll do the rest!
+It's easy to incorporate `PeerConnect`. Just provide us with a few details on your peerConfig object and we'll do the rest!
+If opts is specified to PeerConnect, it will override the default options (shown below).
 
 ```threshold``` - An integer threshold value to determine when to turn on P2P image sharing <i>e.g. if threshold = 3, fourth client will load from peers</i>
 <br>```peerImages``` - A boolean that determines whether to load images P2P

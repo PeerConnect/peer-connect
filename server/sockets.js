@@ -1,6 +1,3 @@
-/* eslint-env browser */
-/* eslint no-use-before-define: ["error", { "functions": false }] */
-
 const Peer = require('simple-peer');
 const parseTorrent = require('parse-torrent');
 const http = require('stream-http');

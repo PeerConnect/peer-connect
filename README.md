@@ -7,7 +7,7 @@
   <br>
 </h1>
 
-<h4 align="left">A P2P CDN Implementation</h4>
+<h4 align="center">A P2P CDN Implementation</h4>
 
 ## About
 PeerConnect is a proof of concept that aims to serve static assets (videos/images) over a peer to peer delivery network powered by WebRTC (images), WebTorrent (videos), and WebSockets (signaling)
@@ -18,23 +18,31 @@ PeerConnect is a proof of concept that aims to serve static assets (videos/image
 ## Usage
 Using PeerConnect requires a script on the client end and initiation on the server.
 ### Setup
+```
+npm install --save peer-connect-client peer-connect-server
+```
 #### Client
-If using a file bundler e.g. (browserify), you can require it in.
+If using a file bundler e.g. (browserify), you can require it in your script file.
 ```js
-const PeerConnect = require('peer-connect');
+const PeerConnectClient = require('peer-connect-client');
+PeerConnectClient();
 ```
-If you just want to test the module without bundling, it is currently being hosted on unpkg CDN. Use it as a script in your html file.
+If you want to use the module without bundling, it is currently being hosted on unpkg CDN. Use it as a script in your html file.
 ```
-https://unpkg.com/peerconnect.js@1.0.11/client/dist/sockets.min.js
+https://unpkg.com/peer-connect-client@0.1.3/peer-connect-client.min.js
+```
+You will need to bring in socket.io as a script in your html file.
+```html
+<script src="/socket.io/socket.io.js"></script>
 ```
 #### Server
 PeerConnect utilizes Express and socket.io to coordinate WebRTC connections. In addition, in order to create webseeds, we create routes serving the video files.
 
-To use it, require peerConnect from our package and pass in the Node Server instance you're using along with your PeerConnect configurations. In Express, you can get this instance by calling app.listen.
+To use it, require PeerConnectServer from our package and pass in the Node Server instance you're using along with your PeerConnectServer configurations. In Express, you can get this instance by calling app.listen.
 
 Here's how you would use it in your server:
 ```js
-const PeerConnect = require('peer-connect');
+const PeerConnectServer = require('peer-connect-server');
 const server = app.listen(8000);
 
 //to allow cross origin resource sharing
@@ -48,10 +56,22 @@ app.use((req, res, next) => {
 });
 
 PeerConnect(server, app, [opts]);
+PeerConnectServer(server, app, [opts]);
 ```
+
+### Example
+Set src attributes in a data-src attribute for assets!
+```html
+<video data-src="../assets/videos/yosemite-hd.mp4" controls src=""></video>
+  <div class="image-container-inner">
+    <img data-src="../assets/image1.jpg">
+    <img data-src="../assets/image2.png">
+  </div>
+```
+
 ### Configuration
-It's easy to incorporate `PeerConnect`. Just provide us with a few details on your peerConfig object and we'll do the rest!
-If opts is specified to PeerConnect, it will override the default options (shown below).
+It's easy to incorporate `PeerConnectServer`. Just provide us with a few details on your peerConfig object and we'll do the rest!
+If opts is specified to PeerConnectServer, it will override the default options (shown below).
 
 ```threshold``` - An integer threshold value to determine when to turn on P2P image sharing <i>e.g. if threshold = 3, fourth client will load from peers</i>
 <br>```peerImages``` - A boolean that determines whether to load images P2P
@@ -79,10 +99,10 @@ If opts is specified to PeerConnect, it will override the default options (shown
 ## Contributing
 To contribute to `PeerConnect`, fork the repository and clone it to your machine then install dependencies with `npm install`. If you're interested in joining the Peer Connect team as a contributor, feel free to message one of us directly!
 ## Authors
-- Justin Ko (https://github.com/justinko43)
-- Mike Gutierrez (https://github.com/mikegutierrez)
-- Peter Lee (https://github.com/wasafune)
-- Jim Kang (https://github.com/jiminykbob)
+- <b>Justin Ko</b> (https://github.com/justinko43)
+- <b>Mike Gutierrez</b> (https://github.com/mikegutierrez)
+- <b>Peter Lee</b> (https://github.com/wasafune)
+- <b>Jim Kang</b> (https://github.com/jiminykbob)
 
 ## License
 This project is licensed under the MIT License - see the LICENSE file for details

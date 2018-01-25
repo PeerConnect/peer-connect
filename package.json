@@ -24,6 +24,8 @@
     "parse-torrent": "^5.8.3",
     "path": "^0.12.7",
     "peer-connect": "^0.1.2",
+    "peer-connect-client": "^0.1.3",
+    "peer-connect-server": "^0.1.1",
     "simple-peer": "^8.2.0",
     "socket.io": "^2.0.4",
     "stream-http": "^2.8.0",

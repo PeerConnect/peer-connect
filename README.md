@@ -8,8 +8,7 @@
 </h1>
 
 <h4 align="center">A P2P CDN Implementation</h4>
-[![NPM](https://img.shields.io/npm/v/npm.svg)](https://www.npmjs.com/package/peer-connect-client)
-
+[![npm](https://img.shields.io/npm/v/peer-connect-client.svg)](https://www.npmjs.com/package/peer-connect-client)
 
 ## About
 PeerConnect is a proof of concept that aims to serve static assets (videos/images) over a peer to peer delivery network powered by WebRTC (images), WebTorrent (videos), and WebSockets (signaling)

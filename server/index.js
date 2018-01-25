@@ -13,7 +13,7 @@ const appDir = path.dirname(require.main.filename);
 * @param {object} app - Put your app in here.
 * @param {object} peerConfig - The config object.
 */
-function PeerConnect(server, app, peerConfig) {
+function PeerConnectServer(server, app, peerConfig) {
   ImageConnect(server, peerConfig);
   if (peerConfig.peerVideos) VideoConnect(app, peerConfig);
 }
@@ -347,4 +347,4 @@ function VideoConnect (app, peerConfig) {
   });
 }
 
-module.exports = PeerConnect;
+module.exports = PeerConnectServer;

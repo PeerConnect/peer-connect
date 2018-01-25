@@ -8,7 +8,7 @@ const WebTorrent = require('webtorrent');
 
 /**
  * adds methods to peers
- * @param {object} peer - peer object 
+ * @param {object} peer - peer object
  */
 function peerMethods(peer) {
   peer.on("error", err => {
@@ -64,6 +64,8 @@ let imageArray = Object.values(document.getElementsByTagName('img'));
 imageArray = imageArray.filter(node => node.hasAttribute('data-src'));
 let imageHeights;
 let imageSliceIndex;
+const inViewportArray = [];
+
 // assign ids to image
 imageArray.forEach((image, index) => image.setAttribute('id', index));
 
@@ -89,7 +91,7 @@ socket.on('torrent', getTorrentFiles);
 socket.on('load_server_video', loadVideosFromServer);
 
 /**
- * 
+ *
  * @param {array} assetTypes - image asset types for server/peer loading
  * @param {boolean} foldLoading - determines doing fold loading or not
  * @param {boolean} hasHeights - determines if signalling server has heights or not
@@ -144,10 +146,14 @@ function createReceiverPeer(initiatorData, assetTypes, foldLoading, imageHeights
   //setimageheights and decide which indeces of image you need to send
   setImageHeights(imageArray, imageHeights);
 
+  for (let i = 0; i < imageArray.length; i += 1) {
+    inViewportArray.push(isElementInViewport(imageArray[i]))
+  }
+
   //if foldLoading is off || if foldLoading is on and image is not in view
   //send indeces of imageArray to request from initiator peer
   for (let i = 0; i < imageArray.length; i += 1) {
-    if (!isElementInViewport(imageArray[i]) && configuration.foldLoading || !configuration.foldLoading) {
+    if ((!inViewportArray[i] && configuration.foldLoading) || !configuration.foldLoading) {
       imageSliceIndex = i;
       break;
     }
@@ -328,13 +334,12 @@ function loopImage() {
     for (let i = 0; i < imageArray.length; i += 1) {
       const imageSource = imageArray[i].dataset.src;
       const extension = getImageType(imageArray[i]);
-      console.log(`${isElementInViewport(imageArray[i])} is: from ${i}`);
-      // const foldLoading = configuration.foldLoading ? isElementInViewport(imageArray[i]) : false;
+      // console.log(`${inViewportArray[i]} is: from ${i}`);
       if (!configuration.assetTypes.includes(extension)) {
         extCounter += 1;
         setServerAsset(imageSource);
       }
-      if (configuration.foldLoading && isElementInViewport(imageArray[i])) {
+      if (configuration.foldLoading && inViewportArray[i]) {
         setServerAsset(imageSource);
       }
     }
@@ -352,7 +357,7 @@ function loopImage() {
 function setImage(imageData, imageArray, index) {
   console.log('Received all data for an image. Setting image.');
   counter += 1;
-  if (!isElementInViewport(imageArray[index]) && configuration.foldLoading || !configuration.foldLoading) {
+  if ((!inViewportArray[index] && configuration.foldLoading) || !configuration.foldLoading) {
     if (imageData.slice(0, 9) === 'undefined') imageArray[index].src = imageData.slice(9);
     else imageArray[index].src = imageData;
   }
@@ -408,7 +413,7 @@ function sendAssetsToPeer(peer, sliceIndex) {
 
 /**
  * returns an array of image heights
- * @param {array} imageArray - array of DOM image nodes 
+ * @param {array} imageArray - array of DOM image nodes
  */
 function setImageHeightsToSend(imageArray) {
   return imageArray.map(imageNode => imageNode.height);
